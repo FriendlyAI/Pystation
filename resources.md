@@ -30,3 +30,5 @@ Icecast - stream audio with server
 [Read from audio device](https://docs.python.org/3/library/ossaudiodev.html)
 
 [Python audio access](https://wiki.python.org/moin/Audio)
+
+[PyAO for multiple streams from one device](https://github.com/tynn/PyAO)
