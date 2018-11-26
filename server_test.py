@@ -9,4 +9,6 @@ def run(server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
 
 run()
 
-# requests.put('localhost:8000', data={'audio/webm': chunk})
+# requests.put('http://localhost:8000/main.mp3', data={'audio/mpeg': chunk}) ? might work
+# requests.put('http://localhost:8000/main.mp3',
+#              headers={'content-type': 'audio/mpeg', 'content': chunk}) ? might work also
