@@ -1,2 +1,1 @@
-libshout
-shouty
+shouty==0.1.dev6

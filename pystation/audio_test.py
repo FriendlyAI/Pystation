@@ -1,32 +1,28 @@
 #! /usr/bin/env python
 
-import sys
+import os
 import time
-import pyaudio
-import wave
-import requests
+
 import shouty
 
-p = pyaudio.PyAudio()
 
-
-def connect_icecast():
-    print('Initial request: ',
-          requests.put('http://172.16.186.128:8000/main.mp3',
-                       auth=('admin', 'hackme'),
-                       headers={'host': 'localhost:8000',
-                                'authorization': 'Basic c291cmNlOmhhY2ttZQ==',
-                                'User-Agent': 'curl/7.51.0',
-                                'Accept': '*/*',
-                                'Transfer-Encoding': 'chunked',
-                                'Content-Type': 'audio/mpeg',
-                                'Ice-Public': '1',
-                                'Ice-Name': 'Teststream',
-                                'Ice-Description': 'This is just a simple test stream',
-                                'Ice-URL': 'http://example.org',
-                                'Ice-Genre': 'Various',
-                                'Expect': '100-continue'})
-          )
+# def connect_icecast():
+#     print('Initial request: ',
+#           requests.put('http://172.16.186.128:8000/main.mp3',
+#                        auth=('admin', 'hackme'),
+#                        headers={'host': 'localhost:8000',
+#                                 'authorization': 'Basic c291cmNlOmhhY2ttZQ==',
+#                                 'User-Agent': 'curl/7.51.0',
+#                                 'Accept': '*/*',
+#                                 'Transfer-Encoding': 'chunked',
+#                                 'Content-Type': 'audio/mpeg',
+#                                 'Ice-Public': '1',
+#                                 'Ice-Name': 'Teststream',
+#                                 'Ice-Description': 'This is just a simple test stream',
+#                                 'Ice-URL': 'http://example.org',
+#                                 'Ice-Genre': 'Various',
+#                                 'Expect': '100-continue'})
+#           )
 
 
 def send_chunk():
@@ -62,7 +58,7 @@ def send_chunk():
         }
     }
     with shouty.connect(**params) as connection:
-        with open('Temp_Audio/shorta.mp3', 'rb') as f:
+        with open('temp/shorta.mp3', 'rb') as f:
             while True:
                 chunk = f.read(1024)
                 if not chunk:
@@ -71,7 +67,7 @@ def send_chunk():
                 connection.send(chunk)
                 connection.sync()
         time.sleep(10)
-        with open('Temp_Audio/shorta.mp3', 'rb') as f:
+        with open('temp/shorta.mp3', 'rb') as f:
             while True:
                 chunk = f.read(1024)
                 if not chunk:
@@ -86,7 +82,7 @@ send_chunk()
 # CHUNK_SIZE = 1024
 #
 # filename = input('file: ')
-# wf = wave.open(f'Temp_Audio/{filename}', 'rb')
+# wf = wave.open(f'temp/{filename}', 'rb')
 #
 # # p.get_device_info_by_index(i)
 # default = p.get_default_input_device_info()

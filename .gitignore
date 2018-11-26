@@ -118,5 +118,5 @@ dmypy.json
 .idea
 
 # Specific
-Temp_Audio
+temp
 conf.ini

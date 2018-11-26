@@ -1,21 +1,26 @@
 from threading import Thread, Event
+
 import shouty
 
 
 class Shouter(Thread):
 
-    def __init__(self, music_q):
+    def __init__(self, user_params, music_q):
+
+        print(user_params)
+
         self.params = {
-            'host': '172.16.186.128',
-            'port': 8000,
-            'user': 'admin',
-            'password': 'hackme',
+            'host': user_params['ICECAST']['Host'],
+            'port': int(user_params['ICECAST']['Port']),
+            'user': user_params['ICECAST']['Username'],
+            'password': user_params['ICECAST']['Password'],
             'format': shouty.Format.MP3,
             'mount': '/main.mp3',
             'audio_info': {
                 'channels': '2'
             }
         }
+
         self.music_q = music_q
 
         # Probably won't need these thanks to queue
@@ -27,6 +32,7 @@ class Shouter(Thread):
     def send_chunk(self, connection):
         chunk = self.music_q.get()
         if chunk:
+            print(chunk)
             connection.send(chunk)
             connection.sync()
 
