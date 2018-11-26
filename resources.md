@@ -32,3 +32,5 @@ Icecast - stream audio with server
 [Python audio access](https://wiki.python.org/moin/Audio)
 
 [PyAO for multiple streams from one device](https://github.com/tynn/PyAO)
+
+[Python libshout](https://github.com/turlando/airhead/tree/master/airhead)
