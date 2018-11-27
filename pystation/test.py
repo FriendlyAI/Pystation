@@ -1,3 +1,4 @@
+'''
 import pyaudio
 import wave
 import sys
@@ -6,11 +7,7 @@ import sys
 chunk = 1024
 
 # validation. If a wave file hasn't been specified, exit.
-'''
-************************************************************************
-      This is the start of the "minimum needed to read a wave"
-************************************************************************
-'''
+
 # open the file for reading.
 wf = wave.open('a.wav', 'rb')
 
@@ -36,3 +33,4 @@ while data != '':
 # cleanup stuff.
 stream.close()
 p.terminate()
+'''

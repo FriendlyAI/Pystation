@@ -117,6 +117,6 @@ dmypy.json
 # idea
 .idea
 
-# Specific
+# Pystation specific
 temp
 conf.ini

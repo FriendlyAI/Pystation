@@ -36,3 +36,5 @@ Icecast - stream audio with server
 [Python libshout](https://github.com/turlando/airhead/tree/master/airhead)
 
 [Change volume from bytes](https://stackoverflow.com/questions/14485873/audio-change-volume-of-samples-in-byte-array)
+
+[Record from speaker](https://github.com/bastibe/SoundCard/blob/master/README.md)

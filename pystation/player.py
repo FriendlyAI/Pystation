@@ -9,28 +9,36 @@ user_params = configparser.ConfigParser()
 user_params.read('config/conf.ini')
 
 music_q = queue.Queue()
+fallback_q = queue.Queue()
 
 SHOUTER = Shouter(user_params, music_q)
 
 
 def play():
-    # counter = 0
-    with open('temp/mg.mp3', 'rb') as f:
-        chunk = f.read(4096)
-        while chunk:
-            # if counter > 1000:
-            #     break
-            music_q.put(chunk)
-            chunk = f.read(4096)
-            # print(counter)
-            # counter += 1
-    # time.sleep(20)
-    # with open('temp/shorta.mp3', 'rb') as f:
-    #     chunk = f.read(1024)
-    #     while chunk:
-    #         music_q.put(chunk)
-    #         chunk = f.read(1024)
+    counter = 0
+    while True:
+        filename = input('filename: ')
+        try:
+            with open(f'temp/{filename}.mp3', 'rb') as f:
+                chunk = f.read(4096)
+                print('uploading...')
+                while chunk:
+                    # if counter > 1000:
+                    #     break
+                    music_q.put(chunk)
+                    chunk = f.read(4096)
+                    # counter += 1
+                    # print(counter)
+
+                    if int(user_params['GENERAL']['Performance']):  # performance mode on
+                        time.sleep(.05)  # read slower, still fast enough for 320Kbps MP3 stream with no buffering
+
+                print('finished')
+        except FileNotFoundError:
+            pass
 
 
-threading.Thread(target=play).start()
-SHOUTER.run()
+# threading.Thread(target=SHOUTER).start()
+SHOUTER.start()
+time.sleep(1)
+play()
