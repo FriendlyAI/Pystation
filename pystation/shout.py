@@ -31,25 +31,24 @@ class Shouter(Thread):
         self.idle = open('config/idle.mp3', 'rb')
 
     def send_chunk(self, connection):
-        chunk = self.music_q.get()
-        if chunk:  # probably can remove; music_q already checked non-empty
-            connection.send(chunk)
-            connection.sync()
+        if self.music_q.empty():  # player is paused/idling
+            chunk = self.idle.read(4096)
+            if not chunk:
+                self.idle.seek(0)
+                chunk = self.idle.read(4096)
+
+        else:  # player is running
+            chunk = self.music_q.get()
+
+        connection.send(chunk)
+        connection.sync()
 
     def run(self):
         print('running...')
         with shouty.connect(**self.params) as connection:
             print('connected')
             while True:
-                if not self.music_q.empty():  # player is running
-                    self.send_chunk(connection)
-                else:  # player is paused
-                    idle_chunk = self.idle.read(4096)
-                    if not idle_chunk:
-                        self.idle.seek(0)
-                        idle_chunk = self.idle.read(4096)
-                    connection.send(idle_chunk)
-                    connection.sync()
+                self.send_chunk(connection)
 
     def join(self, timeout=0):
         self.stop.set()
