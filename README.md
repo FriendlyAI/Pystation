@@ -1,5 +1,15 @@
 # Pystation
 
+## System Requirements
+
+ffmpeg
+
+youtube-dl
+
+Python 3.6
+
+libshout 2
+
 ## Config
 You can set your own default profile by creating a `conf.ini` file in the `config` folder. An example configure file is 
 provided.
