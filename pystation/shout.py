@@ -15,6 +15,7 @@ class Shouter(Thread):
             'password': user_params['ICECAST']['Password'],
             'format': shouty.Format.MP3,
             'mount': '/main.mp3',
+            'description': user_params['ICECAST']['Description'],
             'audio_info': {
                 'channels': '2'
             }
@@ -28,7 +29,8 @@ class Shouter(Thread):
         self.pause = Event()
         self.stop = Event()
 
-        self.idle = open('config/idle.mp3', 'rb')
+        idle_location = user_params['GENERAL']['Idle']
+        self.idle = open(f'{idle_location}', 'rb')
 
     def send_chunk(self, connection):
         if self.music_q.empty():  # player is paused/idling

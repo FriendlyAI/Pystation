@@ -3,7 +3,7 @@ import threading
 import time
 import configparser
 
-from pystation.shout import Shouter
+from shout import Shouter
 
 user_params = configparser.ConfigParser()
 user_params.read('config/conf.ini')
@@ -15,11 +15,11 @@ SHOUTER = Shouter(user_params, music_q)
 
 
 def play():
-    counter = 0
+    # counter = 0
     while True:
         filename = input('filename: ')
         try:
-            with open(f'temp/{filename}.mp3', 'rb') as f:
+            with open(f'{filename}.mp3', 'rb') as f:
                 chunk = f.read(4096)
                 print('uploading...')
                 while chunk:
@@ -35,7 +35,7 @@ def play():
 
                 print('finished')
         except FileNotFoundError:
-            pass
+            print('file not found')
 
 
 # threading.Thread(target=SHOUTER).start()
