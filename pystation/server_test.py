@@ -1,14 +1,26 @@
-from http.server import *
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+from io import BytesIO
 
 
-def run(server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
-    server_address = ('localhost', 8000)
-    httpd = server_class(server_address, handler_class)
-    httpd.serve_forever()
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'Hello, world!')
+
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        body = self.rfile.read(content_length)
+        self.send_response(200)
+        self.end_headers()
+        response = BytesIO()
+        response.write(b'This is POST request. ')
+        response.write(b'Received: ')
+        response.write(body)
+        self.wfile.write(response.getvalue())
 
 
-run()
-
-# requests.put('http://localhost:8000/main.mp3', data={'audio/mpeg': chunk}) ? might work
-# requests.put('http://localhost:8000/main.mp3',
-#              headers={'content-type': 'audio/mpeg', 'content': chunk}) ? might work also
+httpd = HTTPServer(('192.168.1.2', 9000), SimpleHTTPRequestHandler)
+httpd.serve_forever()

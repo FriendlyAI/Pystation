@@ -1,1 +1,4 @@
-shouty==0.1.dev6
+shouty>=0.1.dev6
+PyQT5>=5.11.3
+ffmpeg-python>=0.1.17
+youtube_dl>=2018.11.23
