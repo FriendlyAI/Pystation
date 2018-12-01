@@ -20,7 +20,7 @@ class Shouter(Thread):
             'genre': user_params['ICECAST']['Genre'],
             'audio_info': {
                 'channels': '2',
-                'samplerate': '44100'
+                'samplerate': '44100',
             }
         }
 
@@ -56,6 +56,7 @@ class Shouter(Thread):
 
     def run(self):
         print('running...')
+
         with shouty.connect(**self.params) as connection:
             print('connected')
             while not self.killed.is_set():

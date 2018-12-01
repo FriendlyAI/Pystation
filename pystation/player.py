@@ -41,6 +41,6 @@ def play():
 
 # threading.Thread(target=SHOUTER).start()
 SHOUTER.start()
-time.sleep(5)
+time.sleep(1)
 # SHOUTER.join()  # kills connection, shouter thread
 play()
