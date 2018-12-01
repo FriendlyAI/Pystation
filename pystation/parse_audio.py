@@ -4,6 +4,7 @@ import audioop
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 import os
+from shutil import copyfile
 
 ydl_opts = {
     'postprocessors': [{
@@ -64,8 +65,7 @@ def youtube_download(url):
     return validate(filepath)
 
 
-def convert_bitrate(filename):
-    new_filename = f'{filename[:filename.rindex(".")]} 1.mp3'
+def convert_bitrate(filename, new_filename):
     ff = FFmpeg(
         inputs={filename: '-y'},
         outputs={new_filename: '-ab 192k -ar 44100'}
@@ -73,9 +73,7 @@ def convert_bitrate(filename):
     print(ff.cmd)
     ff.run()
 
-    os.remove(f'{filename}')
-
-    return new_filename
+    os.remove(filename)
 
 
 def get_tags(filename):
@@ -83,12 +81,15 @@ def get_tags(filename):
     :return: f'{artist} - {title}'
     """
     id3 = MP3(filename)
+    new_filename = f'{filename[:filename.rindex(".")]} 1.mp3'
 
     if id3.info.sample_rate != 44100:
         print('converting sample rate')
-        filename = convert_bitrate(filename)  # update filename
+        convert_bitrate(filename, new_filename)  # update filename
         id3 = MP3(filename)  # update id3
 
+    else:
+        copyfile(filename, new_filename)
     # print(id3.pprint())
 
     artist = str(id3.get('TPE1', ''))
@@ -96,13 +97,17 @@ def get_tags(filename):
 
     # clear_tags(filename)
 
-    return f'{artist + " - " if artist else ""}{title}' if title else '', filename
+    return f'{artist + " - " if artist else ""}{title}' if title else '', new_filename
 
 
 def clear_tags(filename):
     mp3 = MP3(filename)
     mp3.delete()
     mp3.save()
+
+
+def get_length(filename):
+    return MP3(filename).info.length
 
 
 def validate(filename):
@@ -115,4 +120,7 @@ def validate(filename):
     """
     track, filename = get_tags(filename)
     clear_tags(filename)
-    return track, filename
+
+    length = get_length(filename)
+
+    return track, filename, length
