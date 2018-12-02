@@ -24,7 +24,7 @@ class Playlist:
     # def get_chunklist(self):
     #     return self.chunklist
 
-    @thread
+    # @thread
     def add_track(self, filename=None, url=None):
         print('add', filename, url)
         if filename:
@@ -32,14 +32,16 @@ class Playlist:
         elif url:
             self.tracklist.append(Track(url=url))
 
-        self.check_queue()
+        print(self.tracklist)
+
+        self.enqueue()
 
     def remove_track(self):
         return self.tracklist.pop(0)
 
     def current_chunk_queue(self):
         if self.current_track.empty():  # track ended, remove empty Queue
-            self.skip_track()
+            self.enqueue()
 
         return None if self.current_track.empty() else self.current_track
 
@@ -49,27 +51,28 @@ class Playlist:
     #     return new_queue
 
     def skip_track(self):
+        if self.tracklist: print(self.tracklist)
         self.current_track = self.next_track
+        self.next_track = Queue()
 
-        if self.next_track.empty():
-            pass
-        else:
-            self.next_track = Queue()
-            self.check_queue()
+        self.enqueue()
 
-    def check_queue(self):
+    def enqueue(self):
         # load next track if less than two tracks cached and tracks in queue
-        if len(self.tracklist) > 0:
-            if self.current_track.empty():
-                self.load_next_track(self.current_track)
-            elif self.next_track.empty():
+        if self.current_track.empty():
+            if self.next_track.empty():
+                if len(self.tracklist) > 0:
+                    self.load_next_track(self.current_track)
+            else:
+                self.current_track = self.next_track
+                self.next_track = Queue()
+        elif self.next_track.empty() and len(self.tracklist) > 0:
                 self.load_next_track(self.next_track)
 
     @thread
     def load_next_track(self, track_slot):
         track = self.remove_track()
         chunk = track.read_chunk(self.chunk_size)
-        print('loading')
 
         while chunk:
             track_slot.put(chunk)

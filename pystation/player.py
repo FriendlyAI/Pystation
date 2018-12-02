@@ -2,6 +2,7 @@ import os
 from tkinter import Tk, filedialog
 from tkinter.ttk import Button, Entry
 
+from thread_decorator import thread
 
 class Player:
     def __init__(self, master, user_params, playlist):
@@ -51,6 +52,7 @@ class Player:
         self.youtube_input.configure(font='Menlo')
         self.youtube_input.pack()
 
+    @thread
     def choose_upload(self):
         print('upload')
         filenames = filedialog.askopenfilenames(initialdir=f'{os.environ["HOME"]}/Downloads',

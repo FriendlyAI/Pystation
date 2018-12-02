@@ -120,3 +120,4 @@ dmypy.json
 # Pystation specific
 temp
 conf.ini
+audio

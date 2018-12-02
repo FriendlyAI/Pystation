@@ -65,7 +65,7 @@ def convert_bitrate(filename, new_filename):
     os.remove(filename)
 
 
-def get_tags(filename):
+def get_tags(filename, temp=False):
     """
     :return: f'{artist} - {title}'
     """
@@ -77,7 +77,8 @@ def get_tags(filename):
         convert_bitrate(filename, new_filename)
     else:
         copyfile(filename, new_filename)
-        os.remove(filename)
+        if temp:
+            os.remove(filename)
 
     # print(id3.pprint())
 
@@ -98,9 +99,9 @@ def get_length(filename):
     return MP3(filename).info.length
 
 
-def validate(filename):
+def validate(filename, temp=False):
     # TODO check extension, convert
-    trackname, filename = get_tags(filename)
+    trackname, filename = get_tags(filename, temp)
     clear_tags(filename)
 
     length = get_length(filename)
@@ -113,4 +114,4 @@ def youtube_download(url):
     filename = YDL.prepare_filename(info)
     filepath = f'{os.getcwd()}/{filename[:filename.rindex(".")]}.mp3'
     print(filepath)
-    return validate(filepath)
+    return validate(filepath, temp=True)

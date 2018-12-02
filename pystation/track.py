@@ -24,6 +24,7 @@ class Track:
     def get_length(self):
         return self.length
 
-    def __str__(self):
+    def __repr__(self):
+        # print(type(self.filename.rindex('/')), self.filename.rindex('.'))
         return self.trackname if self.trackname \
-            else self.filename[self.filename.rindex['/'] + 1, self.filename.rindex['.']]
+            else self.filename[self.filename.rindex('/') + 1:self.filename.rindex('.')]
