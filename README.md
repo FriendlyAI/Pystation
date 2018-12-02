@@ -2,11 +2,11 @@
 
 ## System Requirements
 
+Python 3.6
+
 ffmpeg
 
 youtube-dl
-
-Python 3.6
 
 libshout2
 
