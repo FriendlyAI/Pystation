@@ -39,3 +39,6 @@ stream = p.open(format=FORMAT, channels=CHANNELS,
 stream.close()
 p.terminate()
 '''
+import os
+
+print(os.getcwd())

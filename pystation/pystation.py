@@ -1,26 +1,16 @@
-from player import run_player
-
-from shout import Shouter
-
-from playlist import Playlist
-
 import configparser
 
-from queue import Queue
-
+from playlist import Playlist
+from shout import Shouter
+from player import run_player
 
 user_params = configparser.ConfigParser()
 user_params.read('config/conf.ini')
 
-file_q = Queue()
-chunk_q = Queue()
-
-playlist_ = Playlist()
-
-track = 'None'
+playlist_ = Playlist(user_params.getint('ICECAST', 'Chunk Size'))
 
 if __name__ == '__main__':
-    shouter = Shouter(user_params, chunk_q)
+    shouter = Shouter(user_params, playlist_)
     shouter.start()
 
-    run_player(shouter, user_params, file_q, chunk_q)
+    run_player(user_params, playlist_)

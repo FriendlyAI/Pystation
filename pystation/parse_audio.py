@@ -1,12 +1,12 @@
-import youtube_dl
-from ffmpy import FFmpeg
-import audioop
-from mutagen.easyid3 import EasyID3
-from mutagen.mp3 import MP3
 import os
 from shutil import copyfile
 
+import youtube_dl
+from ffmpy import FFmpeg
+from mutagen.mp3 import MP3
+
 ydl_opts = {
+    'format': 'bestaudio/best',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
         'preferredcodec': 'mp3',
@@ -17,6 +17,7 @@ ydl_opts = {
 
 YDL = youtube_dl.YoutubeDL(ydl_opts)
 
+
 # ffmpeg -i in.flac -ab 320k out.mp3
 # 320 kbps encoding flac
 
@@ -26,7 +27,7 @@ YDL = youtube_dl.YoutubeDL(ydl_opts)
 # ffmpeg -i in.mp3 -ab 192k -ar 44100 out.mp3
 # convert to 44100 Hz
 
-# youtube-dl --extract-audio --audio-format mp3 --audio-quality
+# youtube-dl --extract-audio --audio-format mp3 --audio-quality 192K
 # filename:  --output "%(title)s.%(ext)s"
 # get filename: --get-filename
 # -f 'bestaudio[asr=44100]'
@@ -35,8 +36,6 @@ YDL = youtube_dl.YoutubeDL(ydl_opts)
 # ffmpeg -i in.mp3 -c:a libvorbis -q:a 4 out.ogg
 # -q 192000?
 # ogg
-
-# fallback, devil need resampling
 
 
 def convert_flac():
@@ -55,16 +54,6 @@ def convert_webm():
     pass
 
 
-def youtube_download(url):
-    """
-    :return: filename
-    """
-    out = YDL.extract_info(url, download=True)
-    filename = YDL.prepare_filename(out)
-    filepath = f'{filename[:filename.rindex(".")]}.mp3'
-    return validate(filepath)
-
-
 def convert_bitrate(filename, new_filename):
     ff = FFmpeg(
         inputs={filename: '-y'},
@@ -81,21 +70,20 @@ def get_tags(filename):
     :return: f'{artist} - {title}'
     """
     id3 = MP3(filename)
-    new_filename = f'{filename[:filename.rindex(".")]} 1.mp3'
+    new_filename = f'{os.getcwd()}/temp{filename[filename.rindex("/"):filename.rindex(".")]} temp.mp3'
 
     if id3.info.sample_rate != 44100:
         print('converting sample rate')
-        convert_bitrate(filename, new_filename)  # update filename
-        id3 = MP3(filename)  # update id3
-
+        convert_bitrate(filename, new_filename)
     else:
         copyfile(filename, new_filename)
+        os.remove(filename)
+
     # print(id3.pprint())
 
+    id3 = MP3(new_filename)
     artist = str(id3.get('TPE1', ''))
     title = str(id3.get('TIT2', ''))
-
-    # clear_tags(filename)
 
     return f'{artist + " - " if artist else ""}{title}' if title else '', new_filename
 
@@ -111,16 +99,18 @@ def get_length(filename):
 
 
 def validate(filename):
-    """
-    channels
-    sample rate
-    extension
-    clear tags
-    :return: bool: successful conversion to file format for stream
-    """
-    track, filename = get_tags(filename)
+    # TODO check extension, convert
+    trackname, filename = get_tags(filename)
     clear_tags(filename)
 
     length = get_length(filename)
 
-    return track, filename, length
+    return trackname, filename, length
+
+
+def youtube_download(url):
+    info = YDL.extract_info(url, download=True)
+    filename = YDL.prepare_filename(info)
+    filepath = f'{os.getcwd()}/{filename[:filename.rindex(".")]}.mp3'
+    print(filepath)
+    return validate(filepath)

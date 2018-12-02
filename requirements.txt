@@ -1,5 +1,4 @@
 shouty>=0.1.dev6
-PyQT5>=5.11.3
 youtube_dl>=2018.11.23
 mutagen>=1.41.1
 ffmpy>=0.2.2
