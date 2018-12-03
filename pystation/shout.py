@@ -16,7 +16,7 @@ class Shouter(Thread):
             'format': shouty.Format.MP3,
             'mount': user_params.get('ICECAST', 'Mount'),
             'name': user_params.get('ICECAST', 'Name'),
-            'description': user_params['ICECAST']['Description'],
+            'description': user_params.get('ICECAST', 'Description'),
             'genre': user_params.get('ICECAST', 'Genre'),
             'audio_info': {
                 'channels': '2',
@@ -30,10 +30,6 @@ class Shouter(Thread):
 
         self.track = track
 
-        # Probably won't need these thanks to queue
-        # Pause can be kept just for a check
-        # self.skip = Event()
-        # self.paused = Event()
         self.killed = Event()
         self.killed.clear()
 
@@ -55,7 +51,6 @@ class Shouter(Thread):
             chunk = current_queue.get()
 
         # print(chunk[:10])
-
         connection.send(chunk)
         connection.sync()
 
@@ -71,12 +66,6 @@ class Shouter(Thread):
                 self.send_chunk(connection)
 
         print('disconnected')
-
-    # def pause(self):
-    #     self.paused.set()
-    #
-    # def unpause(self):
-    #     self.paused.clear()
 
     def kill(self):
         self.killed.set()

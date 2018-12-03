@@ -1,8 +1,8 @@
 import configparser
 
+from player import run_player
 from playlist import Playlist
 from shout import Shouter
-from player import run_player
 
 user_params = configparser.ConfigParser()
 user_params.read('config/conf.ini')

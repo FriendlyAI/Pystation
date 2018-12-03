@@ -18,26 +18,6 @@ ydl_opts = {
 YDL = youtube_dl.YoutubeDL(ydl_opts)
 
 
-# ffmpeg -i in.flac -ab 320k out.mp3
-# 320 kbps encoding flac
-
-# ffmpeg -i in.mp3 -map 0:a -codec:a copy -map_metadata -1 out.mp3
-# clear tags
-
-# ffmpeg -i in.mp3 -ab 192k -ar 44100 out.mp3
-# convert to 44100 Hz
-
-# youtube-dl --extract-audio --audio-format mp3 --audio-quality 192K
-# filename:  --output "%(title)s.%(ext)s"
-# get filename: --get-filename
-# -f 'bestaudio[asr=44100]'
-# download from youtube as mp3
-
-# ffmpeg -i in.mp3 -c:a libvorbis -q:a 4 out.ogg
-# -q 192000?
-# ogg
-
-
 def convert_flac():
     pass
 

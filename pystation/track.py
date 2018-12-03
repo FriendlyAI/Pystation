@@ -25,6 +25,7 @@ class Track:
         return self.length
 
     def __repr__(self):
-        # print(type(self.filename.rindex('/')), self.filename.rindex('.'))
-        return self.trackname if self.trackname \
-            else self.filename[self.filename.rindex('/') + 1:self.filename.rindex('.')]
+        if self.trackname:
+            return self.trackname
+        else:
+            return self.filename[self.filename.rindex('/') + 1:self.filename.rindex(' temp')]

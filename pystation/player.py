@@ -1,8 +1,10 @@
 import os
-from tkinter import Tk, filedialog
-from tkinter.ttk import Button, Entry
+from time import time
+from tkinter import Tk, filedialog, StringVar
+from tkinter.ttk import Button, Entry, Label, Progressbar
 
 from thread_decorator import thread
+
 
 class Player:
     def __init__(self, master, user_params, playlist):
@@ -21,11 +23,10 @@ class Player:
         self.y_center = screen_height / 2 - self.height / 2
 
         self.master.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
-        self.master.title('Pystation Player')
+        self.master.title(f'Pystation@{user_params.get("ICECAST", "Host")}{user_params.get("ICECAST", "Mount")}')
 
         self.playlist = playlist
 
-        # self.chunk_size = int(user_params['ICECAST']['Chunk Size'])
         self.chunk_size = user_params.getint('ICECAST', 'Chunk Size')
 
         self.paused = False
@@ -38,7 +39,17 @@ class Player:
 
         self.youtube_input = Entry(self.master, width=20)
 
+        self.now_playing_label_text = StringVar()
+
+        self.now_playing_label = Label(self.master, textvariable=self.now_playing_label_text)
+
+        self.progress_bar = Progressbar(self.master, orient='horizontal', length=150, mode='determinate', maximum=1000)
+
+        self.progress_label = Label(self.master, font='Menlo')
+
         self.init_ui()
+
+        self.update_player()
 
     def init_ui(self):
 
@@ -51,6 +62,12 @@ class Player:
         self.youtube_input.bind('<Return>', func=lambda _: self.youtube_download(self.youtube_input.get()))
         self.youtube_input.configure(font='Menlo')
         self.youtube_input.pack()
+
+        self.now_playing_label.pack()
+
+        self.progress_bar.pack()
+
+        self.progress_label.pack()
 
     @thread
     def choose_upload(self):
@@ -75,11 +92,46 @@ class Player:
 
     def youtube_download(self, url):
         print(f'yt download: {url}')
-        self.playlist.add_track(url=url)
+        self.playlist.add_youtube_track(url)
+
+    def update_player(self):
+        def seconds_to_time(seconds):
+            minutes, seconds = divmod(seconds, 60)
+            hours, minutes = divmod(minutes, 60)
+
+            if hours:
+                return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+            else:
+                return '{:02d}:{:02d}'.format(minutes, seconds)
+
+        now_playing = self.playlist.get_now_playing()  # Track object
+
+        if now_playing:
+            now_playing_name = repr(now_playing)
+            now_playing_length = int(round(now_playing.get_length()))
+            now_playing_time = int(round(time() - self.playlist.get_start_time()))
+            progress = int(round(now_playing_time / now_playing_length * 1000))
+        else:  # idle
+            now_playing_name = 'Idle'
+            now_playing_length = 0
+            now_playing_time = 0
+            progress = 1000
+
+        # update progress bar and label
+        self.progress_bar['value'] = progress
+        self.progress_label.config(text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
+
+        # update now playing name
+
+        self.now_playing_label_text.set(now_playing_name)
+
+        # update again in 1 second
+        self.master.after(1000, self.update_player)
 
 
 def run_player(user_params, playlist):
     root = Tk()
+    root.configure(background='gray92')
     _ = Player(root, user_params, playlist)
 
     # tab_control = ttk.Notebook(root)  # Create Tab Control
