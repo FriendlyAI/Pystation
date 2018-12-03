@@ -1,5 +1,5 @@
 import os
-from time import time
+from math import floor
 from tkinter import Tk, filedialog, StringVar
 from tkinter.ttk import Button, Entry, Label, Progressbar
 
@@ -29,7 +29,7 @@ class Player:
 
         self.chunk_size = user_params.getint('ICECAST', 'Chunk Size')
 
-        self.paused = False
+        self.update_time = 100  # in milleseconds
 
         self.upload_button = Button(self.master, text='Upload', command=self.choose_upload)
 
@@ -96,25 +96,33 @@ class Player:
 
     def update_player(self):
         def seconds_to_time(seconds):
+            seconds = int(seconds)
             minutes, seconds = divmod(seconds, 60)
             hours, minutes = divmod(minutes, 60)
 
             if hours:
-                return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+                return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, floor(seconds))
             else:
-                return '{:02d}:{:02d}'.format(minutes, seconds)
+                return '{:02d}:{:02d}'.format(minutes, floor(seconds))
 
         now_playing = self.playlist.get_now_playing()  # Track object
 
-        if now_playing:
+        if not self.playlist.get_paused() and now_playing:
             now_playing_name = repr(now_playing)
-            now_playing_length = int(round(now_playing.get_length()))
-            now_playing_time = int(round(time() - self.playlist.get_start_time()))
-            progress = int(round(now_playing_time / now_playing_length * 1000))
+
+            now_playing_time = self.playlist.get_play_time()
+            now_playing_length = now_playing.get_length()
+
+            progress = now_playing_time / now_playing_length * 1000
+
+            self.playlist.increment_play_time(self.update_time)
+
         else:  # idle
             now_playing_name = 'Idle'
-            now_playing_length = 0
+
             now_playing_time = 0
+            now_playing_length = 0
+
             progress = 1000
 
         # update progress bar and label
@@ -125,8 +133,7 @@ class Player:
 
         self.now_playing_label_text.set(now_playing_name)
 
-        # update again in 1 second
-        self.master.after(1000, self.update_player)
+        self.master.after(self.update_time, self.update_player)
 
 
 def run_player(user_params, playlist):

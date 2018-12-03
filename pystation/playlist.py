@@ -1,6 +1,5 @@
 import os
 from queue import Queue
-from time import time
 
 from thread_decorator import thread
 from track import Track
@@ -11,7 +10,7 @@ class Playlist:
         print('init playlist')
         self.tracklist = []  # list of Track objects
         self.now_playing = None
-        self.start_time = time()
+        self.play_time = 0
 
         self.current_track = Queue()  # queue of chunks
         self.next_track = Queue()  # queue of chunks
@@ -74,7 +73,9 @@ class Playlist:
             else:
                 self.current_track = self.next_track
                 self.next_track = Queue()
-        elif self.next_track.empty() and len(self.tracklist) > 0:
+                self.set_now_playing(self.remove_track())
+
+        if self.next_track.empty() and len(self.tracklist) > 0:
                 self.load_next_track(self.next_track, False)
 
     @thread
@@ -95,10 +96,10 @@ class Playlist:
 
         try:
             os.remove(track.get_filename())
-            print(f'loaded {track.get_trackname()}/{track.get_filename()} and deleted')
+            print(f'loaded {track.get_trackname()}|{track.get_filename()} and deleted')
         except FileNotFoundError:  # file already removed when preloaded as next track
             print('couldnt delete', track.get_filename())
-            pass
+            # probably don't need
 
     def set_paused(self, value):
         self.paused = value
@@ -107,11 +108,14 @@ class Playlist:
         return self.paused
 
     def set_now_playing(self, track):
-        self.start_time = time()
+        self.play_time = 0
         self.now_playing = track
 
     def get_now_playing(self):
         return self.now_playing
 
-    def get_start_time(self):
-        return self.start_time
+    def get_play_time(self):
+        return self.play_time
+
+    def increment_play_time(self, milleseconds):
+        self.play_time += milleseconds / 1000
