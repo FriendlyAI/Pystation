@@ -5,7 +5,7 @@ import shouty
 
 class Shouter(Thread):
 
-    def __init__(self, user_params, playlist, track=''):
+    def __init__(self, user_params, playlist):
         super(Shouter, self).__init__()
 
         self.params = {
@@ -28,8 +28,6 @@ class Shouter(Thread):
 
         self.playlist = playlist
 
-        self.track = track
-
         self.killed = Event()
         self.killed.clear()
 
@@ -39,22 +37,18 @@ class Shouter(Thread):
     def send_chunk(self, connection):
         current_queue = self.playlist.current_chunk_queue()
 
-        if not current_queue or self.playlist.get_paused():
-            # nothing in queue or idling
+        if not current_queue or self.playlist.get_paused():  # nothing in queue or idling
             chunk = self.idle.read(self.chunk_size)
             if not chunk:
                 self.idle.seek(0)
                 chunk = self.idle.read(self.chunk_size)
 
-        else:
-            # current track playing
+        else:  # current track playing
             chunk = current_queue.get()
 
         # print(chunk[:10])
         connection.send(chunk)
         connection.sync()
-
-        # connection.set_metadata_song(self.track)
         # connection.free()
 
     def run(self):

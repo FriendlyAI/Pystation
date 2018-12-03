@@ -24,17 +24,13 @@ class Playlist:
     # @thread
     def add_track(self, filename):
         self.tracklist.append(Track(filename=filename))
-
         print(self.tracklist, 'added', filename)
-
         self.enqueue()
 
     @thread
     def add_youtube_track(self, url):
         self.tracklist.append(Track(url=url))
-
         print(self.tracklist, 'added', url)
-
         self.enqueue()
 
     def remove_track(self):
@@ -87,7 +83,6 @@ class Playlist:
             track = self.get_track()
 
         print('Queueing', track)
-
         chunk = track.read_chunk(self.chunk_size)
 
         while chunk:
@@ -117,5 +112,5 @@ class Playlist:
     def get_play_time(self):
         return self.play_time
 
-    def increment_play_time(self, milleseconds):
-        self.play_time += milleseconds / 1000
+    def increment_play_time(self, milliseconds):
+        self.play_time += milliseconds / 1000

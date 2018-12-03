@@ -29,7 +29,7 @@ class Player:
 
         self.chunk_size = user_params.getint('ICECAST', 'Chunk Size')
 
-        self.update_time = 100  # in milleseconds
+        self.update_time = 200  # in milleseconds
 
         self.upload_button = Button(self.master, text='Upload', command=self.choose_upload)
 
@@ -37,13 +37,13 @@ class Player:
 
         self.skip_button = Button(self.master, text='Skip', command=self.skip)
 
-        self.youtube_input = Entry(self.master, width=20)
+        self.youtube_input = Entry(self.master, width=40)
 
         self.now_playing_label_text = StringVar()
 
         self.now_playing_label = Label(self.master, textvariable=self.now_playing_label_text)
 
-        self.progress_bar = Progressbar(self.master, orient='horizontal', length=150, mode='determinate', maximum=1000)
+        self.progress_bar = Progressbar(self.master, orient='horizontal', length=300, mode='determinate', maximum=1000)
 
         self.progress_label = Label(self.master, font='Menlo')
 
@@ -81,10 +81,11 @@ class Player:
         paused_bool = self.playlist.get_paused()
         if paused_bool:
             self.pause_button['text'] = 'Pause'
+            print('play')
         else:
             self.pause_button['text'] = 'Play'
+            print('pause')
         self.playlist.set_paused(not paused_bool)
-        print('pause toggled')
 
     def skip(self):
         print('skip')
@@ -109,28 +110,27 @@ class Player:
 
         if not self.playlist.get_paused() and now_playing:
             now_playing_name = repr(now_playing)
-
             now_playing_time = self.playlist.get_play_time()
             now_playing_length = now_playing.get_length()
 
             progress = now_playing_time / now_playing_length * 1000
 
-            self.playlist.increment_play_time(self.update_time)
+            self.playlist.increment_play_time(self.update_time * 1.01)  # account for slight lag
 
         else:  # idle
             now_playing_name = 'Idle'
-
             now_playing_time = 0
             now_playing_length = 0
 
             progress = 1000
 
         # update progress bar and label
-        self.progress_bar['value'] = progress
-        self.progress_label.config(text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
+        if not self.playlist.get_paused():
+            self.progress_bar['value'] = progress
+            self.progress_label.config(
+                text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
 
         # update now playing name
-
         self.now_playing_label_text.set(now_playing_name)
 
         self.master.after(self.update_time, self.update_player)
