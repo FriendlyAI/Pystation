@@ -106,7 +106,7 @@ class Player:
             else:
                 return '{:02d}:{:02d}'.format(minutes, floor(seconds))
 
-        now_playing = self.playlist.get_now_playing()  # Track object
+        now_playing = self.playlist.get_current_track()  # Track object
 
         if not self.playlist.get_paused() and now_playing:
             now_playing_name = repr(now_playing)

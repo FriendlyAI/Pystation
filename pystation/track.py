@@ -1,4 +1,5 @@
 from os.path import isfile
+from queue import Queue
 
 from parse_audio import validate, youtube_download
 
@@ -10,7 +11,12 @@ class Track:
         elif url:
             self.trackname, self.filename, self.length = youtube_download(url)
 
+        if not self.filename:  # file failed to download/validate
+            raise FileNotFoundError
+
         self.file_reader = open(self.filename, 'rb')
+
+        self.chunk_queue = Queue()
 
     def read_chunk(self, chunk_size):
         return self.file_reader.read(chunk_size)
@@ -24,8 +30,14 @@ class Track:
     def get_length(self):
         return self.length
 
+    def get_chunk_queue(self):
+        return self.chunk_queue
+
+    def set_chunk_queue(self, queue):
+        self.chunk_queue = queue
+
     def __repr__(self):
         if self.trackname:
             return self.trackname
         else:
-            return self.filename[self.filename.rindex('/') + 1:self.filename.rindex(' temp')]
+            return self.filename[self.filename.rindex('/') + 1 : self.filename.rindex(' temp')]

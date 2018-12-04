@@ -17,6 +17,8 @@ ydl_opts = {
 
 YDL = youtube_dl.YoutubeDL(ydl_opts)
 
+CACHE = set()
+
 
 def convert_flac():
     pass
@@ -34,6 +36,10 @@ def convert_webm():
     pass
 
 
+def convert_mp4():
+    pass
+
+
 def convert_bitrate(filename, new_filename):
     ff = FFmpeg(
         inputs={filename: '-y'},
@@ -42,7 +48,10 @@ def convert_bitrate(filename, new_filename):
     print(ff.cmd)
     ff.run()
 
-    os.remove(filename)
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass
 
 
 def get_tags(filename, temp=False):
@@ -58,10 +67,12 @@ def get_tags(filename, temp=False):
     else:
         copyfile(filename, new_filename)
         if temp:
-            os.remove(filename)
+            try:
+                os.remove(filename)
+            except FileNotFoundError:
+                pass
 
     # print(id3.pprint())
-
     id3 = MP3(new_filename)
     artist = str(id3.get('TPE1', ''))
     title = str(id3.get('TIT2', ''))
@@ -79,19 +90,27 @@ def get_length(filename):
     return MP3(filename).info.length
 
 
-def validate(filename, temp=False):
+def validate(filename, temp=False, cache_url=None):
     # TODO check extension, convert
     trackname, filename = get_tags(filename, temp)
+
     clear_tags(filename)
 
     length = get_length(filename)
+
+    if cache_url:  # youtube url downloaded, can download again
+        CACHE.remove(cache_url)
 
     return trackname, filename, length
 
 
 def youtube_download(url):
-    info = YDL.extract_info(url, download=True)
-    filename = YDL.prepare_filename(info)
-    filepath = f'{os.getcwd()}/{filename[:filename.rindex(".")]}.mp3'
-    print(filepath)
-    return validate(filepath, temp=True)
+    if url in CACHE:  # url currently being downloaded already
+        print('url already added')
+        return None, None, None
+    else:
+        CACHE.add(url)
+        info = YDL.extract_info(url, download=True)
+        filename = YDL.prepare_filename(info)
+        filepath = f'{os.getcwd()}/{filename[:filename.rindex(".")]}.mp3'
+        return validate(filepath, temp=True, cache_url=url)
