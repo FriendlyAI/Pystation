@@ -4,6 +4,7 @@ from shutil import copyfile
 import youtube_dl
 from ffmpy import FFmpeg
 from mutagen.mp3 import MP3
+from mutagen.flac import FLAC
 
 ydl_opts = {
     'format': 'bestaudio/best',
@@ -20,15 +21,22 @@ YDL = youtube_dl.YoutubeDL(ydl_opts)
 CACHE = set()
 
 
-def convert_flac():
-    pass
+def convert_flac(filename, mp3_filename):
+    ff = FFmpeg(
+        inputs={filename: '-y'},
+        outputs={mp3_filename: '-ab 320k -ar 44100 -map_metadata -1 -map 0:a'}
+    )
+    print(ff.cmd)
+    ff.run()
+
+    # return mp3_filename
 
 
 def convert_ogg():
     pass
 
 
-def convert_m4a():
+def convert_aac():
     pass
 
 
@@ -48,34 +56,58 @@ def convert_bitrate(filename, new_filename):
     print(ff.cmd)
     ff.run()
 
-    try:
-        os.remove(filename)
-    except FileNotFoundError:
-        pass
-
 
 def get_tags(filename, temp=False):
     """
     :return: f'{artist} - {title}'
     """
-    id3 = MP3(filename)
+    extension = filename[filename.rindex('.'):]
     new_filename = f'{os.getcwd()}/temp{filename[filename.rindex("/"):filename.rindex(".")]} temp.mp3'
 
-    if id3.info.sample_rate != 44100:
-        print('converting sample rate')
-        convert_bitrate(filename, new_filename)
-    else:
-        copyfile(filename, new_filename)
-        if temp:
-            try:
-                os.remove(filename)
-            except FileNotFoundError:
-                pass
+    if extension == '.mp3':
+        id3 = MP3(filename)
+        artist = id3.get('TPE1', [''])[0]
+        title = id3.get('TIT2', [''])[0]
+
+        if id3.info.sample_rate != 44100:
+            print('converting sample rate')
+            convert_bitrate(filename, new_filename)
+        else:
+            copyfile(filename, new_filename)
+        # id3 = MP3(new_filename)
+        # artist = str(id3.get('TPE1', ''))
+        # title = str(id3.get('TIT2', ''))
+
+    elif extension == '.flac':
+        id3 = FLAC(filename)
+        artist = id3.get('ARTIST', [''])[0]
+        title = id3.get('TITLE', [''])[0]
+        convert_flac(filename, new_filename)
+
+    elif extension == '.aac':
+        artist = ''
+        title = ''
+        convert_aac()
+
+    elif extension == '.webm':
+        artist = ''
+        title = ''
+        convert_webm()
+
+    elif extension == '.mp4':
+        artist = ''
+        title = ''
+        convert_mp4()
+
+    else:  # should never be called
+        artist = ''
+        title = ''
+
+    if temp:
+        os.remove(filename)
 
     # print(id3.pprint())
-    id3 = MP3(new_filename)
-    artist = str(id3.get('TPE1', ''))
-    title = str(id3.get('TIT2', ''))
+    print(new_filename)
 
     return f'{artist + " - " if artist else ""}{title}' if title else '', new_filename
 
@@ -91,7 +123,6 @@ def get_length(filename):
 
 
 def validate(filename, temp=False, cache_url=None):
-    # TODO check extension, convert
     trackname, filename = get_tags(filename, temp)
 
     clear_tags(filename)

@@ -5,6 +5,9 @@ from tkinter.ttk import Button, Entry, Label, Progressbar
 
 from thread_decorator import thread
 
+filetypes = ['.mp3', '.flac', '.ogg', '.m4a', '.webm', '.mp4']
+FILEDIALOG_TYPES = ' '.join(f'*{filetype}' for filetype in filetypes)
+
 
 class Player:
     def __init__(self, master, user_params, playlist):
@@ -74,7 +77,7 @@ class Player:
         print('upload')
         filenames = filedialog.askopenfilenames(initialdir=f'{os.environ["HOME"]}/Downloads',
                                                 title='Select File',
-                                                filetypes=([('Audio', '*.mp3 *.flac')]))
+                                                filetypes=([('Audio', FILEDIALOG_TYPES)]))
         [self.playlist.add_track(filename) for filename in filenames]
 
     def toggle_pause(self):
@@ -92,6 +95,9 @@ class Player:
         self.playlist.skip_track()
 
     def youtube_download(self, url):
+        if '&list' in url:  # don't download playlist
+            # consider downloading all in list
+            url = url[:url.index('&list')]
         print(f'yt download: {url}')
         self.playlist.add_youtube_track(url)
 
@@ -121,8 +127,7 @@ class Player:
             now_playing_name = 'Idle'
             now_playing_time = 0
             now_playing_length = 0
-
-            progress = 1000
+            progress = 0
 
         # update progress bar and label
         if not self.playlist.get_paused():
@@ -140,10 +145,5 @@ def run_player(user_params, playlist):
     root = Tk()
     root.configure(background='gray92')
     _ = Player(root, user_params, playlist)
-
-    # tab_control = ttk.Notebook(root)  # Create Tab Control
-    # player = ttk.Frame(tab_control)  # Create a tab
-    # tab_control.add(player, text='Tab 1')  # Add the tab
-    # player.pack(expand=1, fill='both')  # Pack to make visible
 
     root.mainloop()

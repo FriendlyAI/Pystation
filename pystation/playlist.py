@@ -1,5 +1,3 @@
-import os
-
 from thread_decorator import thread
 from track import Track
 
@@ -23,20 +21,19 @@ class Playlist:
     # @thread
     def add_track(self, filename):
         self.tracklist.append(Track(filename=filename))
-        print(self.tracklist, 'added', filename)
+        print(f'tracklist: {self.tracklist}\nadded {filename}')
         self.enqueue()
 
     @thread
     def add_youtube_track(self, url):
         self.loading_tracklist.append(url)
+        print(self.loading_tracklist)
         try:
             track = Track(url=url)
         except FileNotFoundError:
             pass
         else:
-            self.loading_tracklist.remove(url)
             self.tracklist.append(track)
-            print(self.tracklist, 'added', url)
             self.enqueue()
         finally:
             self.loading_tracklist.remove(url)
@@ -77,6 +74,7 @@ class Playlist:
                     self.load_next_track(True)
                 else:
                     self.reset_playtime()
+                    self.current_track = None
             else:
                 self.skip_track()
 
@@ -86,6 +84,7 @@ class Playlist:
 
     @thread
     def load_next_track(self, now_playing):
+        #  convert file at same time as loading?
         if now_playing:  # loaded track is playing now, remove from track queue
             self.current_track = self.remove_track()
             track_slot = self.current_track
@@ -95,19 +94,20 @@ class Playlist:
             track_slot = self.next_track
 
         if track_slot.get_chunk_queue().empty():  # Track has not been loaded before
-            print('Queueing', track_slot)
+            print('queueing', track_slot)
             chunk = track_slot.read_chunk(self.chunk_size)
 
             while chunk:
                 track_slot.get_chunk_queue().put(chunk)
                 chunk = track_slot.read_chunk(self.chunk_size)
 
-        try:
-            os.remove(track_slot.get_filename())
-            print(f'loaded {track_slot.get_trackname()}|{track_slot.get_filename()} and deleted')
-        except FileNotFoundError:  # file already removed when preloaded as next track
-            print('couldnt delete', track_slot.get_filename())
-            # should never be called
+        track_slot.delete_file()
+
+        # try:
+        #     os.remove(track_slot.get_filename())
+        #     print(f'loaded {track_slot.get_trackname()}|{track_slot.get_filename()} and deleted')
+        # except FileNotFoundError:  # file already removed, should never happen
+        #     print(f'couldnt delete {track_slot.get_trackname()}|{track_slot.get_filename()}')
 
     def get_current_track(self):
         return self.current_track
