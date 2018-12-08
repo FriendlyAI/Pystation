@@ -1,7 +1,7 @@
 import os
 from math import floor
 from tkinter import Tk, filedialog, StringVar
-from tkinter.ttk import Button, Entry, Label, Progressbar
+from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame
 
 from thread_decorator import thread
 
@@ -32,7 +32,7 @@ class Player:
 
         self.chunk_size = user_params.getint('ICECAST', 'Chunk Size')
 
-        self.update_time = 200  # in milleseconds
+        self.update_time = 100  # in milleseconds
 
         self.upload_button = Button(self.master, text='Upload', command=self.choose_upload)
 
@@ -49,6 +49,12 @@ class Player:
         self.progress_bar = Progressbar(self.master, orient='horizontal', length=300, mode='determinate', maximum=1000)
 
         self.progress_label = Label(self.master, font='Menlo')
+
+        self.playlist_frame = Frame(self.master)
+
+        self.playlist_tree = Treeview(self.playlist_frame, height=12, columns='Length', selectmode='extended')
+
+        self.playlist_scrollbar = Scrollbar(self.playlist_frame, command=self.playlist_tree.yview)
 
         self.init_ui()
 
@@ -71,6 +77,20 @@ class Player:
         self.progress_bar.pack()
 
         self.progress_label.pack()
+
+        self.playlist_frame.configure()
+        self.playlist_frame.pack(side='bottom')
+
+        self.playlist_tree.heading('#0', text='Track', anchor='center')
+        self.playlist_tree.column('#0', width=400, minwidth=100)
+        self.playlist_tree.heading(column='Length', text='Length', anchor='center')
+        self.playlist_tree.column(column='Length', width=50, minwidth=50)
+        self.playlist_tree.configure(yscrollcommand=self.playlist_scrollbar.set)
+        self.playlist_tree.pack(side='left')
+
+        # self.playlist_scrollbar.place(x=590, y=0, height=400)
+        # self.playlist_scrollbar.place(bordermode='outside', anchor='e', height=200)
+        self.playlist_scrollbar.pack(side='right', fill='y')
 
     @thread
     def choose_upload(self):
@@ -137,6 +157,13 @@ class Player:
 
         # update now playing name
         self.now_playing_label_text.set(now_playing_name)
+
+        # update playlist tree
+        if not self.playlist.get_updated():
+            self.playlist_tree.delete(*self.playlist_tree.get_children())
+            for track in self.playlist.get_tracks():
+                self.playlist_tree.insert('', 'end', text=repr(track), values=seconds_to_time(track.get_length()))
+            self.playlist.update()
 
         self.master.after(self.update_time, self.update_player)
 

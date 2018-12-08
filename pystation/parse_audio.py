@@ -1,10 +1,10 @@
-import os
+from os import getcwd, remove
 from shutil import copyfile
 
 import youtube_dl
 from ffmpy import FFmpeg
-from mutagen.mp3 import MP3
 from mutagen.flac import FLAC
+from mutagen.mp3 import MP3
 
 ydl_opts = {
     'format': 'bestaudio/best',
@@ -28,8 +28,6 @@ def convert_flac(filename, mp3_filename):
     )
     print(ff.cmd)
     ff.run()
-
-    # return mp3_filename
 
 
 def convert_ogg():
@@ -62,21 +60,18 @@ def get_tags(filename, temp=False):
     :return: f'{artist} - {title}'
     """
     extension = filename[filename.rindex('.'):]
-    new_filename = f'{os.getcwd()}/temp{filename[filename.rindex("/"):filename.rindex(".")]} temp.mp3'
+    new_filename = f'{getcwd()}/temp{filename[filename.rindex("/"):filename.rindex(".")]} temp.mp3'
 
     if extension == '.mp3':
         id3 = MP3(filename)
-        artist = id3.get('TPE1', [''])[0]
-        title = id3.get('TIT2', [''])[0]
+        artist = str(id3.get('TPE1', ''))
+        title = str(id3.get('TIT2', ''))
 
         if id3.info.sample_rate != 44100:
             print('converting sample rate')
             convert_bitrate(filename, new_filename)
         else:
             copyfile(filename, new_filename)
-        # id3 = MP3(new_filename)
-        # artist = str(id3.get('TPE1', ''))
-        # title = str(id3.get('TIT2', ''))
 
     elif extension == '.flac':
         id3 = FLAC(filename)
@@ -104,10 +99,7 @@ def get_tags(filename, temp=False):
         title = ''
 
     if temp:
-        os.remove(filename)
-
-    # print(id3.pprint())
-    print(new_filename)
+        remove(filename)
 
     return f'{artist + " - " if artist else ""}{title}' if title else '', new_filename
 
@@ -143,5 +135,5 @@ def youtube_download(url):
         CACHE.add(url)
         info = YDL.extract_info(url, download=True)
         filename = YDL.prepare_filename(info)
-        filepath = f'{os.getcwd()}/{filename[:filename.rindex(".")]}.mp3'
+        filepath = f'{getcwd()}/{filename[:filename.rindex(".")]}.mp3'
         return validate(filepath, temp=True, cache_url=url)

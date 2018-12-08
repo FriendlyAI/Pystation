@@ -15,14 +15,18 @@ class Playlist:
         self.chunk_size = chunk_size
         self.paused = False
 
+        self.updated = True  # false tells GUI that tracklist needs updating
+
     def get_tracks(self):
         return self.tracklist
 
     # @thread
     def add_track(self, filename):
-        self.tracklist.append(Track(filename=filename))
+        track = Track(filename=filename)
+        self.tracklist.append(track)
         print(f'tracklist: {self.tracklist}\nadded {filename}')
         self.enqueue()
+        self.updated = False
 
     @thread
     def add_youtube_track(self, url):
@@ -35,11 +39,13 @@ class Playlist:
         else:
             self.tracklist.append(track)
             self.enqueue()
+            self.updated = False
         finally:
             self.loading_tracklist.remove(url)
 
     def remove_track(self):
         if len(self.tracklist) > 0:
+            self.updated = False
             return self.tracklist.pop(0)
 
     def get_next_track(self):
@@ -64,13 +70,20 @@ class Playlist:
 
         self.enqueue()
 
+    def skip_next_track(self):
+        if self.tracklist:
+            print(self.tracklist)
+
+        self.next_track = None
+
+        self.remove_track()
+
     def enqueue(self):
         # called when current track finished
         # load next track if less than two tracks cached and tracks in queue
         if not self.current_track or self.current_track.get_chunk_queue().empty():
             if not self.next_track:
                 if len(self.tracklist) > 0:
-                    # self.load_next_track(self.current_track, True)
                     self.load_next_track(True)
                 else:
                     self.reset_playtime()
@@ -79,7 +92,6 @@ class Playlist:
                 self.skip_track()
 
         elif not self.next_track and len(self.tracklist) > 0:
-                # self.load_next_track(self.next_track, False)
                 self.load_next_track(False)
 
     @thread
@@ -103,12 +115,6 @@ class Playlist:
 
         track_slot.delete_file()
 
-        # try:
-        #     os.remove(track_slot.get_filename())
-        #     print(f'loaded {track_slot.get_trackname()}|{track_slot.get_filename()} and deleted')
-        # except FileNotFoundError:  # file already removed, should never happen
-        #     print(f'couldnt delete {track_slot.get_trackname()}|{track_slot.get_filename()}')
-
     def get_current_track(self):
         return self.current_track
 
@@ -126,3 +132,9 @@ class Playlist:
 
     def increment_play_time(self, milliseconds):
         self.play_time += milliseconds / 1000
+
+    def update(self):
+        self.updated = True
+
+    def get_updated(self):
+        return self.updated
