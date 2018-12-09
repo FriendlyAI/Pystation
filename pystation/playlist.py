@@ -88,6 +88,7 @@ class Playlist:
                 else:
                     self.reset_playtime()
                     self.current_track = None
+                    self.updated = False
             else:
                 self.skip_track()
 
@@ -96,7 +97,6 @@ class Playlist:
 
     @thread
     def load_next_track(self, now_playing):
-        #  convert file at same time as loading?
         if now_playing:  # loaded track is playing now, remove from track queue
             self.current_track = self.remove_track()
             track_slot = self.current_track

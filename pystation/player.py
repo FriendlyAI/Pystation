@@ -155,11 +155,11 @@ class Player:
             self.progress_label.config(
                 text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
 
-        # update now playing name
-        self.now_playing_label_text.set(now_playing_name)
-
-        # update playlist tree
         if not self.playlist.get_updated():
+            # update now playing name
+            self.now_playing_label_text.set(now_playing_name)
+
+            # update playlist tree
             self.playlist_tree.delete(*self.playlist_tree.get_children())
             for track in self.playlist.get_tracks():
                 self.playlist_tree.insert('', 'end', text=repr(track), values=seconds_to_time(track.get_length()))
