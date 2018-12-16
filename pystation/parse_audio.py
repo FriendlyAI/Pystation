@@ -24,7 +24,7 @@ CACHE = set()
 def convert_flac(filename, mp3_filename):
     ff = FFmpeg(
         inputs={filename: '-y'},
-        outputs={mp3_filename: '-ab 320k -ar 44100 -map_metadata -1 -map 0:a'}
+        outputs={mp3_filename: '-ab 192k -ar 44100 -map_metadata -1 -map 0:a'}
     )
     print(ff.cmd)
     ff.run()
@@ -56,9 +56,6 @@ def convert_bitrate(filename, new_filename):
 
 
 def get_tags(filename, temp=False):
-    """
-    :return: f'{artist} - {title}'
-    """
     extension = filename[filename.rindex('.'):]
     new_filename = f'{getcwd()}/temp{filename[filename.rindex("/"):filename.rindex(".")]} temp.mp3'
 

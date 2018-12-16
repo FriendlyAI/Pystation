@@ -1,5 +1,5 @@
-from os.path import isfile
 from os import remove
+from os.path import isfile
 from queue import Queue
 
 from parse_audio import validate, youtube_download
@@ -19,6 +19,8 @@ class Track:
 
         self.chunk_queue = Queue()
 
+        self.read = False
+
     def read_chunk(self, chunk_size):
         return self.file_reader.read(chunk_size)
 
@@ -26,7 +28,7 @@ class Track:
         try:
             remove(self.filename)
             print(f'loaded {self.trackname}|{self.filename} and deleted')
-        except FileNotFoundError:  # file already removed, should never happen
+        except FileNotFoundError:  # file already removed
             print(f'couldnt delete {self.trackname}|{self.filename}')
 
     def get_trackname(self):
@@ -43,6 +45,12 @@ class Track:
 
     def set_chunk_queue(self, queue):
         self.chunk_queue = queue
+
+    def get_read(self):
+        return self.read
+
+    def set_read(self):
+        self.read = True
 
     def __repr__(self):
         if self.trackname:

@@ -8,6 +8,5 @@ venv/
 .idea/
 
 # Pystation specific
-audio/
 temp/
 conf.ini

@@ -17,7 +17,7 @@ class Player:
         self.master.resizable(width=False, height=False)
 
         self.width = 600
-        self.height = 400
+        self.height = 475
 
         screen_width = master.winfo_screenwidth()
         screen_height = master.winfo_screenheight()
@@ -30,17 +30,17 @@ class Player:
 
         self.playlist = playlist
 
-        self.chunk_size = user_params.getint('ICECAST', 'Chunk Size')
+        self.chunk_size = user_params.getint('ICECAST', 'ChunkSize')
 
         self.update_time = 100  # in milleseconds
+
+        self.focused_items = []
 
         self.upload_button = Button(self.master, text='Upload', command=self.choose_upload)
 
         self.pause_button = Button(self.master, text='Pause', command=self.toggle_pause)
 
         self.skip_button = Button(self.master, text='Skip', command=self.skip)
-
-        self.youtube_input = Entry(self.master, width=40)
 
         self.now_playing_label_text = StringVar()
 
@@ -49,6 +49,14 @@ class Player:
         self.progress_bar = Progressbar(self.master, orient='horizontal', length=300, mode='determinate', maximum=1000)
 
         self.progress_label = Label(self.master, font='Menlo')
+
+        self.youtube_input = Entry(self.master, width=40, font='Menlo')
+
+        self.remove_track_button = Button(self.master, text='Remove', command=self.remove_tracks)
+
+        self.move_tracks_up_button = Button(self.master, text='Move Up', command=self.move_tracks_up)
+
+        self.move_tracks_down_button = Button(self.master, text='Move Down', command=self.move_tracks_down)
 
         self.playlist_frame = Frame(self.master)
 
@@ -68,17 +76,21 @@ class Player:
 
         self.skip_button.pack()
 
-        self.youtube_input.bind('<Return>', func=lambda _: self.youtube_download(self.youtube_input.get()))
-        self.youtube_input.configure(font='Menlo')
-        self.youtube_input.pack()
-
         self.now_playing_label.pack()
 
         self.progress_bar.pack()
 
         self.progress_label.pack()
 
-        self.playlist_frame.configure()
+        self.youtube_input.bind('<Return>', func=lambda _: self.youtube_download(self.youtube_input.get()))
+        self.youtube_input.pack()
+
+        self.remove_track_button.pack()
+
+        self.move_tracks_up_button.pack()
+
+        self.move_tracks_down_button.pack()
+
         self.playlist_frame.pack(side='bottom')
 
         self.playlist_tree.heading('#0', text='Track', anchor='center')
@@ -88,8 +100,6 @@ class Player:
         self.playlist_tree.configure(yscrollcommand=self.playlist_scrollbar.set)
         self.playlist_tree.pack(side='left')
 
-        # self.playlist_scrollbar.place(x=590, y=0, height=400)
-        # self.playlist_scrollbar.place(bordermode='outside', anchor='e', height=200)
         self.playlist_scrollbar.pack(side='right', fill='y')
 
     @thread
@@ -155,17 +165,46 @@ class Player:
             self.progress_label.config(
                 text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
 
-        if not self.playlist.get_updated():
-            # update now playing name
-            self.now_playing_label_text.set(now_playing_name)
+        # update now playing name
+        self.now_playing_label_text.set(now_playing_name)
 
+        if not self.playlist.get_updated():
             # update playlist tree
             self.playlist_tree.delete(*self.playlist_tree.get_children())
-            for track in self.playlist.get_tracks():
-                self.playlist_tree.insert('', 'end', text=repr(track), values=seconds_to_time(track.get_length()))
+            for index, track in enumerate(self.playlist.get_tracks()):
+                self.playlist_tree.insert('', 'end', iid=index, text=repr(track),
+                                          values=seconds_to_time(track.get_length()))
+            if self.focused_items:
+                for index in self.focused_items:
+                    self.playlist_tree.selection_add(index)
+                self.focused_items = []
+
             self.playlist.update()
 
         self.master.after(self.update_time, self.update_player)
+
+    def remove_tracks(self):
+        selected = self.playlist_tree.selection()
+        if selected:
+            self.playlist.remove_tracks((int(index) for index in reversed(selected)))
+
+    def move_tracks_up(self):
+        selected = self.playlist_tree.selection()
+
+        if '0' in selected:  # can't move up
+            return
+        elif selected:
+            self.playlist.move_tracks_up((int(index) for index in reversed(selected)))
+            self.focused_items = [str(int(index) - 1) for index in selected]
+
+    def move_tracks_down(self):
+        selected = self.playlist_tree.selection()
+
+        if str(len(self.playlist_tree.get_children()) - 1) in selected:  # can't move down
+            return
+        elif selected:
+            self.playlist.move_tracks_down((int(index) for index in reversed(selected)))
+            self.focused_items = [str(int(index) + 1) for index in selected]
 
 
 def run_player(user_params, playlist):

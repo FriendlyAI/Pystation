@@ -20,7 +20,6 @@ class Playlist:
     def get_tracks(self):
         return self.tracklist
 
-    # @thread
     def add_track(self, filename):
         track = Track(filename=filename)
         self.tracklist.append(track)
@@ -31,7 +30,7 @@ class Playlist:
     @thread
     def add_youtube_track(self, url):
         self.loading_tracklist.append(url)
-        print(self.loading_tracklist)
+
         try:
             track = Track(url=url)
         except FileNotFoundError:
@@ -43,13 +42,39 @@ class Playlist:
         finally:
             self.loading_tracklist.remove(url)
 
-    def remove_track(self):
+    def remove_track(self, index):
         if len(self.tracklist) > 0:
             self.updated = False
-            return self.tracklist.pop(0)
+            track = self.tracklist.pop(index)
+            if index == 0:
+                self.load_next_track(False)
+                return track
+            else:
+                track.delete_file()
+
+    def remove_tracks(self, track_indices):
+        if len(self.tracklist) > 0:
+            for track_index in track_indices:
+                self.remove_track(track_index)
+
+    def move_tracks_up(self, track_indices):
+        for index in track_indices:
+            self.tracklist.insert(index - 1, self.tracklist.pop(index))
+
+        self.load_next_track(False)
+        self.updated = False
+
+    def move_tracks_down(self, track_indices):
+        for index in track_indices:
+            self.tracklist.insert(index + 1, self.tracklist.pop(index))
+
+        self.load_next_track(False)
+        self.updated = False
 
     def get_next_track(self):
-        return self.tracklist[0]
+        if len(self.tracklist) > 0:
+            return self.tracklist[0]
+        return None
 
     def current_chunk_queue(self):
         if not self.current_track or self.current_track.get_chunk_queue().empty():  # track ended, enqueue next
@@ -59,61 +84,48 @@ class Playlist:
         return self.current_track.get_chunk_queue()
 
     def skip_track(self):
-        if self.tracklist:
-            print(self.tracklist)
-
-        self.current_track = self.next_track
-        self.next_track = None
-
-        self.remove_track()
-        self.reset_playtime()
+        self.current_track = None
 
         self.enqueue()
-
-    def skip_next_track(self):
-        if self.tracklist:
-            print(self.tracklist)
-
-        self.next_track = None
-
-        self.remove_track()
 
     def enqueue(self):
         # called when current track finished
         # load next track if less than two tracks cached and tracks in queue
         if not self.current_track or self.current_track.get_chunk_queue().empty():
-            if not self.next_track:
-                if len(self.tracklist) > 0:
-                    self.load_next_track(True)
-                else:
-                    self.reset_playtime()
-                    self.current_track = None
-                    self.updated = False
+            self.reset_playtime()
+            if not self.next_track and len(self.tracklist) > 0:
+                self.load_next_track(True)
             else:
-                self.skip_track()
+                self.current_track = self.next_track
+                self.remove_track(0)
+                self.load_next_track(False)
 
         elif not self.next_track and len(self.tracklist) > 0:
-                self.load_next_track(False)
+            self.load_next_track(False)
 
     @thread
     def load_next_track(self, now_playing):
         if now_playing:  # loaded track is playing now, remove from track queue
-            self.current_track = self.remove_track()
+            self.current_track = self.remove_track(0)
             track_slot = self.current_track
             self.reset_playtime()
         else:  # preloading next track, keep in queue
+            if len(self.tracklist) < 1:
+                self.next_track = None
+                return
             self.next_track = self.get_next_track()
             track_slot = self.next_track
 
-        if track_slot.get_chunk_queue().empty():  # Track has not been loaded before
+        if not track_slot.get_read():  # Track has not been loaded before
             print('queueing', track_slot)
+            track_slot.set_read()
             chunk = track_slot.read_chunk(self.chunk_size)
 
             while chunk:
                 track_slot.get_chunk_queue().put(chunk)
                 chunk = track_slot.read_chunk(self.chunk_size)
 
-        track_slot.delete_file()
+            track_slot.delete_file()
 
     def get_current_track(self):
         return self.current_track

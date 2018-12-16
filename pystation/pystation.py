@@ -1,15 +1,14 @@
-import configparser
+from configparser import ConfigParser
+from os import remove, listdir, getcwd
 
 from player import run_player
 from playlist import Playlist
 from shout import Shouter
 
-from os import remove, listdir, getcwd
-
-user_params = configparser.ConfigParser()
+user_params = ConfigParser()
 user_params.read('config/conf.ini')
 
-playlist_ = Playlist(user_params.getint('ICECAST', 'Chunk Size'))
+playlist_ = Playlist(user_params.getint('ICECAST', 'ChunkSize'))
 
 temp_path = f'{getcwd()}/temp'
 

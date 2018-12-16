@@ -24,14 +24,14 @@ class Shouter(Thread):
             }
         }
 
-        self.chunk_size = user_params.getint('ICECAST', 'Chunk Size')
+        self.chunk_size = user_params.getint('ICECAST', 'ChunkSize')
 
         self.playlist = playlist
 
         self.killed = Event()
         self.killed.clear()
 
-        self.idle = open(f'{user_params["GENERAL"]["Idle"]}', 'rb')
+        self.idle = open(f'{user_params.get("GENERAL", "IDLE")}', 'rb')
         # check if idle is correct format
 
     def send_chunk(self, connection):
