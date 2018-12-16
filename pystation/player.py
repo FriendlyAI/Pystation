@@ -1,7 +1,8 @@
 import os
 from math import floor
 from tkinter import Tk, filedialog, StringVar
-from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame
+from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style
+import platform
 
 from thread_decorator import thread
 
@@ -14,10 +15,15 @@ class Player:
         # Window initialization
 
         self.master = master
-        self.master.resizable(width=False, height=False)
+        # self.master.resizable(width=False, height=False)
 
-        self.width = 600
-        self.height = 475
+        self.scale = 1
+
+        if platform.system() == 'Linux':
+            self.scale = 2
+
+        self.width = 600 * self.scale
+        self.height = 400 * self.scale
 
         screen_width = master.winfo_screenwidth()
         screen_height = master.winfo_screenheight()
@@ -36,6 +42,8 @@ class Player:
 
         self.focused_items = []
 
+        self.style = Style()
+
         self.upload_button = Button(self.master, text='Upload', command=self.choose_upload)
 
         self.pause_button = Button(self.master, text='Pause', command=self.toggle_pause)
@@ -44,31 +52,38 @@ class Player:
 
         self.now_playing_label_text = StringVar()
 
-        self.now_playing_label = Label(self.master, textvariable=self.now_playing_label_text)
+        self.now_playing_label = Label(self.master, background='gray92', textvariable=self.now_playing_label_text)
 
-        self.progress_bar = Progressbar(self.master, orient='horizontal', length=300, mode='determinate', maximum=1000)
+        self.progress_bar = Progressbar(self.master, orient='horizontal', length=300 * self.scale,
+                                        mode='determinate', maximum=1000)
 
-        self.progress_label = Label(self.master, font='Menlo')
+        self.progress_label = Label(self.master, font='Menlo', background='gray92')
 
         self.youtube_input = Entry(self.master, width=40, font='Menlo')
 
-        self.remove_track_button = Button(self.master, text='Remove', command=self.remove_tracks)
-
-        self.move_tracks_up_button = Button(self.master, text='Up', command=self.move_tracks_up)
-
-        self.move_tracks_down_button = Button(self.master, text='Down', command=self.move_tracks_down)
-
         self.playlist_frame = Frame(self.master)
 
-        self.playlist_tree = Treeview(self.playlist_frame, height=12, columns='Length', selectmode='extended')
+        self.playlist_frame_display = Frame(self.playlist_frame)
 
-        self.playlist_scrollbar = Scrollbar(self.playlist_frame, command=self.playlist_tree.yview)
+        self.playlist_frame_controls = Frame(self.playlist_frame)
+
+        self.playlist_tree = Treeview(self.playlist_frame_display, height=12, columns='Length', selectmode='extended')
+
+        self.playlist_scrollbar = Scrollbar(self.playlist_frame_display, command=self.playlist_tree.yview)
+
+        self.remove_track_button = Button(self.playlist_frame_controls, text='Remove', command=self.remove_tracks)
+
+        self.move_tracks_up_button = Button(self.playlist_frame_controls, text='Up', command=self.move_tracks_up)
+
+        self.move_tracks_down_button = Button(self.playlist_frame_controls, text='Down', command=self.move_tracks_down)
 
         self.init_ui()
 
         self.update_player()
 
     def init_ui(self):
+        self.style.configure('Treeview.Heading', font=(None, 10))
+        self.style.configure('TFrame', background='gray92')
 
         self.upload_button.pack()
 
@@ -76,31 +91,35 @@ class Player:
 
         self.skip_button.pack()
 
-        self.now_playing_label.pack()
+        self.now_playing_label.pack(pady=10)
 
         self.progress_bar.pack()
 
         self.progress_label.pack()
 
         self.youtube_input.bind('<Return>', func=lambda _: self.youtube_download(self.youtube_input.get()))
-        self.youtube_input.pack()
-
-        self.remove_track_button.pack()
-
-        self.move_tracks_up_button.pack()
-
-        self.move_tracks_down_button.pack()
+        self.youtube_input.pack(pady=10)
 
         self.playlist_frame.pack(side='bottom')
 
+        self.playlist_frame_display.pack(side='left')
+
+        self.playlist_frame_controls.pack(side='right')
+
         self.playlist_tree.heading('#0', text='Track', anchor='center')
-        self.playlist_tree.column('#0', width=400, minwidth=100)
+        self.playlist_tree.column('#0', width=400 * self.scale, minwidth=300 * self.scale)
         self.playlist_tree.heading(column='Length', text='Length', anchor='center')
-        self.playlist_tree.column(column='Length', width=50, minwidth=50)
+        self.playlist_tree.column(column='Length', width=50 * self.scale, minwidth=50 * self.scale)
         self.playlist_tree.configure(yscrollcommand=self.playlist_scrollbar.set)
         self.playlist_tree.pack(side='left')
 
         self.playlist_scrollbar.pack(side='right', fill='y')
+
+        self.remove_track_button.pack(padx=10)
+
+        self.move_tracks_up_button.pack(padx=10)
+
+        self.move_tracks_down_button.pack(padx=10)
 
     @thread
     def choose_upload(self):

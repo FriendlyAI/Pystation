@@ -22,5 +22,5 @@ if __name__ == '__main__':
     for file in listdir(temp_path):
         try:
             remove(f'{temp_path}/{file}')
-        except PermissionError:
+        except (PermissionError, IsADirectoryError):
             pass
