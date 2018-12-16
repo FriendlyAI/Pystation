@@ -54,9 +54,9 @@ class Player:
 
         self.remove_track_button = Button(self.master, text='Remove', command=self.remove_tracks)
 
-        self.move_tracks_up_button = Button(self.master, text='Move Up', command=self.move_tracks_up)
+        self.move_tracks_up_button = Button(self.master, text='Up', command=self.move_tracks_up)
 
-        self.move_tracks_down_button = Button(self.master, text='Move Down', command=self.move_tracks_down)
+        self.move_tracks_down_button = Button(self.master, text='Down', command=self.move_tracks_down)
 
         self.playlist_frame = Frame(self.master)
 
@@ -104,7 +104,6 @@ class Player:
 
     @thread
     def choose_upload(self):
-        print('upload')
         filenames = filedialog.askopenfilenames(initialdir=f'{os.environ["HOME"]}/Downloads',
                                                 title='Select File',
                                                 filetypes=([('Audio', FILEDIALOG_TYPES)]))
@@ -114,21 +113,17 @@ class Player:
         paused_bool = self.playlist.get_paused()
         if paused_bool:
             self.pause_button['text'] = 'Pause'
-            print('play')
         else:
             self.pause_button['text'] = 'Play'
-            print('pause')
         self.playlist.set_paused(not paused_bool)
 
     def skip(self):
-        print('skip')
         self.playlist.skip_track()
 
     def youtube_download(self, url):
         if '&list' in url:  # don't download playlist
             # consider downloading all in list
             url = url[:url.index('&list')]
-        print(f'yt download: {url}')
         self.playlist.add_youtube_track(url)
 
     def update_player(self):

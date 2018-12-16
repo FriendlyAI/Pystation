@@ -29,6 +29,7 @@ class Playlist:
 
     @thread
     def add_youtube_track(self, url):
+        print(f'yt download: {url}')
         self.loading_tracklist.append(url)
 
         try:
@@ -78,8 +79,8 @@ class Playlist:
 
     def current_chunk_queue(self):
         if not self.current_track or self.current_track.get_chunk_queue().empty():  # track ended, enqueue next
-            self.enqueue()
-            return None
+            if not self.enqueue():  # current track not ready/idling
+                return None
 
         return self.current_track.get_chunk_queue()
 
@@ -89,19 +90,28 @@ class Playlist:
         self.enqueue()
 
     def enqueue(self):
-        # called when current track finished
-        # load next track if less than two tracks cached and tracks in queue
+        """
+        called when current_track finished or new track added
+        returns True if new current_track ready to play
+        """
+
         if not self.current_track or self.current_track.get_chunk_queue().empty():
             self.reset_playtime()
-            if not self.next_track and len(self.tracklist) > 0:
-                self.load_next_track(True)
+            if not self.next_track:
+                if len(self.tracklist) > 0:
+                    self.load_next_track(True)
+                else:
+                    self.current_track = None
+                return False
             else:
                 self.current_track = self.next_track
                 self.remove_track(0)
                 self.load_next_track(False)
+                return True
 
         elif not self.next_track and len(self.tracklist) > 0:
             self.load_next_track(False)
+            return True
 
     @thread
     def load_next_track(self, now_playing):
