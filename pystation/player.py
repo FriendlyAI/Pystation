@@ -1,12 +1,11 @@
 import os
-from math import floor
+from platform import system
 from tkinter import Tk, filedialog, StringVar
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style
-import platform
 
 from thread_decorator import thread
 
-filetypes = ['.mp3', '.flac', '.ogg', '.m4a', '.webm', '.mp4']
+filetypes = ('.mp3', '.flac', '.ogg', '.m4a', '.webm', '.mp4')
 FILEDIALOG_TYPES = ' '.join(f'*{filetype}' for filetype in filetypes)
 
 
@@ -18,17 +17,14 @@ class Player:
 
         self.scale = 1
 
-        if platform.system() == 'Linux':
+        if system() == 'Linux':
             self.scale = 2
 
         self.width = 600 * self.scale
         self.height = 400 * self.scale
 
-        screen_width = master.winfo_screenwidth()
-        screen_height = master.winfo_screenheight()
-
-        self.x_center = screen_width / 2 - self.width / 2
-        self.y_center = screen_height / 2 - self.height / 2
+        self.x_center = master.winfo_screenwidth() / 2 - self.width / 2
+        self.y_center = master.winfo_screenheight() / 2 - self.height / 2
 
         self.master.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
         self.master.title(f'Pystation@{user_params.get("ICECAST", "Host")}{user_params.get("ICECAST", "Mount")}')
@@ -70,19 +66,19 @@ class Player:
 
         self.playlist_scrollbar = Scrollbar(self.playlist_frame_display, command=self.playlist_tree.yview)
 
-        self.remove_track_button = Button(self.playlist_frame_controls, text='Remove', command=self.remove_tracks)
-
         self.move_tracks_up_button = Button(self.playlist_frame_controls, text='Up', command=self.move_tracks_up)
 
         self.move_tracks_down_button = Button(self.playlist_frame_controls, text='Down', command=self.move_tracks_down)
+
+        self.remove_track_button = Button(self.playlist_frame_controls, text='Remove', command=self.remove_tracks)
 
         self.init_ui()
 
         self.update_player()
 
     def init_ui(self):
-        self.style.configure('Treeview', rowheight=20 * self.scale)
         self.style.configure('TFrame', background='gray92')
+        self.style.configure('Treeview', rowheight=20 * self.scale)
 
         self.upload_button.pack()
 
@@ -90,14 +86,14 @@ class Player:
 
         self.skip_button.pack()
 
-        self.now_playing_label.pack(pady=10)
+        self.now_playing_label.pack(pady=10 * self.scale)
 
         self.progress_bar.pack()
 
         self.progress_label.pack()
 
         self.youtube_input.bind('<Return>', func=lambda _: self.youtube_download(self.youtube_input.get()))
-        self.youtube_input.pack(pady=10)
+        self.youtube_input.pack(pady=10 * self.scale)
 
         self.playlist_frame.pack(side='bottom')
 
@@ -106,7 +102,7 @@ class Player:
         self.playlist_frame_controls.pack(side='right')
 
         self.playlist_tree.heading('#0', text='Track', anchor='center')
-        self.playlist_tree.column('#0', width=400 * self.scale, minwidth=300 * self.scale)
+        self.playlist_tree.column('#0', width=425 * self.scale, minwidth=300 * self.scale)
         self.playlist_tree.heading(column='Length', text='Length', anchor='center')
         self.playlist_tree.column(column='Length', width=50 * self.scale, minwidth=50 * self.scale)
         self.playlist_tree.configure(yscrollcommand=self.playlist_scrollbar.set)
@@ -114,11 +110,11 @@ class Player:
 
         self.playlist_scrollbar.pack(side='right', fill='y')
 
-        self.remove_track_button.pack(padx=10)
+        self.move_tracks_up_button.pack(padx=10 * self.scale)
 
-        self.move_tracks_up_button.pack(padx=10)
+        self.move_tracks_down_button.pack(padx=10 * self.scale)
 
-        self.move_tracks_down_button.pack(padx=10)
+        self.remove_track_button.pack(padx=10 * self.scale)
 
     @thread
     def choose_upload(self):
@@ -140,20 +136,18 @@ class Player:
 
     def youtube_download(self, url):
         if '&list' in url:  # don't download playlist
-            # consider downloading all in list
             url = url[:url.index('&list')]
         self.playlist.add_youtube_track(url)
 
     def update_player(self):
         def seconds_to_time(seconds):
-            seconds = int(seconds)
-            minutes, seconds = divmod(seconds, 60)
+            minutes, seconds = divmod(int(seconds), 60)
             hours, minutes = divmod(minutes, 60)
 
             if hours:
-                return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, floor(seconds))
+                return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
             else:
-                return '{:02d}:{:02d}'.format(minutes, floor(seconds))
+                return '{:02d}:{:02d}'.format(minutes, seconds)
 
         now_playing = self.playlist.get_current_track()  # Track object
 
@@ -198,6 +192,7 @@ class Player:
 
     def remove_tracks(self):
         selected = self.playlist_tree.selection()
+
         if selected:
             self.playlist.remove_tracks((int(index) for index in reversed(selected)))
 
@@ -223,7 +218,7 @@ class Player:
 def run_player(user_params, playlist):
     root = Tk()
     root.configure(background='gray92')
-    
+
     _ = Player(root, user_params, playlist)
 
     root.mainloop()

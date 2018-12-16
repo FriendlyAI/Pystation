@@ -1,4 +1,4 @@
-from os import getcwd, remove
+from os import getcwd, remove, rename
 from shutil import copyfile
 
 import youtube_dl
@@ -46,12 +46,11 @@ def convert_mp4():
     pass
 
 
-def convert_bitrate(filename, new_filename):
+def reformat_mp3(filename, new_filename):
     ff = FFmpeg(
         inputs={filename: '-y'},
-        outputs={new_filename: '-ab 192k -ar 44100'}
+        outputs={new_filename: '-ab 192k -ar 44100 -ac 2'}
     )
-    print(ff.cmd)
     ff.run()
 
 
@@ -64,11 +63,15 @@ def get_tags(filename, temp=False):
         artist = str(id3.get('TPE1', ''))
         title = str(id3.get('TIT2', ''))
 
-        if id3.info.sample_rate != 44100:
-            print('converting sample rate')
-            convert_bitrate(filename, new_filename)
-        else:
+        if id3.info.sample_rate != 44100 or id3.info.channels != 2:
+            print('reformatting mp3')
+            reformat_mp3(filename, new_filename)
+            if temp:
+                remove(filename)
+        elif not temp:
             copyfile(filename, new_filename)
+        else:
+            rename(filename, new_filename)
 
     elif extension == '.flac':
         id3 = FLAC(filename)
@@ -94,9 +97,6 @@ def get_tags(filename, temp=False):
     else:  # should never be called
         artist = ''
         title = ''
-
-    if temp:
-        remove(filename)
 
     return f'{artist + " - " if artist else ""}{title}' if title else '', new_filename
 

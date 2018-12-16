@@ -52,8 +52,6 @@ class Shouter(Thread):
         # connection.free()
 
     def run(self):
-        print('running...')
-
         with shouty.connect(**self.params) as connection:
             print('connected')
             while not self.killed.is_set():

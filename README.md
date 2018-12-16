@@ -21,4 +21,7 @@ provided.
 The default `idle.mp3` is a silent file that will play when the player is idling i.e. there is no track playing or 
 queued. You may choose a different idle track by changing the idle file location.
 
+Note: the idle track must be in the correct format or it may cause client disconnects on certain music players (like 
+web browsers).
+
 ###### train train, i love pystation

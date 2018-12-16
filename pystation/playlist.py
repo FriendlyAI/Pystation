@@ -4,7 +4,6 @@ from track import Track
 
 class Playlist:
     def __init__(self, chunk_size):
-        print('init playlist')
         self.tracklist = []  # list of upcoming Track objects
         self.loading_tracklist = []  # list of urls (filenames?) still being loaded
         self.play_time = 0
