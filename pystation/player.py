@@ -15,7 +15,6 @@ class Player:
         # Window initialization
 
         self.master = master
-        # self.master.resizable(width=False, height=False)
 
         self.scale = 1
 
@@ -54,8 +53,8 @@ class Player:
 
         self.now_playing_label = Label(self.master, background='gray92', textvariable=self.now_playing_label_text)
 
-        self.progress_bar = Progressbar(self.master, orient='horizontal', length=300 * self.scale,
-                                        mode='determinate', maximum=1000)
+        self.progress_bar = Progressbar(self.master, orient='horizontal', length=300 * self.scale, mode='determinate',
+                                        maximum=1000)
 
         self.progress_label = Label(self.master, font='Menlo', background='gray92')
 
@@ -82,7 +81,7 @@ class Player:
         self.update_player()
 
     def init_ui(self):
-        self.style.configure('Treeview.Heading', font=(None, 10))
+        self.style.configure('Treeview', rowheight=20 * self.scale)
         self.style.configure('TFrame', background='gray92')
 
         self.upload_button.pack()
@@ -224,6 +223,7 @@ class Player:
 def run_player(user_params, playlist):
     root = Tk()
     root.configure(background='gray92')
+    
     _ = Player(root, user_params, playlist)
 
     root.mainloop()
