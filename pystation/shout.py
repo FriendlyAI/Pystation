@@ -45,6 +45,7 @@ class Shouter(Thread):
 
         else:  # current track playing
             chunk = current_queue.get()
+            self.playlist.increment_progress()
 
         # print(chunk[:10])
         connection.send(chunk)

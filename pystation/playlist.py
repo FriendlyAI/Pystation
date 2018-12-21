@@ -6,21 +6,20 @@ class Playlist:
     def __init__(self, chunk_size):
         self.tracklist = []  # list of upcoming Track objects
         self.loading_tracklist = []  # list of urls (filenames?) still being loaded
-        self.play_time = 0
 
         self.current_track = None  # Track object
         self.next_track = None  # Track object
+        self.progress = 0  # number of read chunks this track
 
         self.chunk_size = chunk_size
         self.paused = False
-
         self.updated = True  # false tells GUI that tracklist needs updating
 
     def get_tracks(self):
         return self.tracklist
 
     def add_track(self, filename):
-        track = Track(filename=filename)
+        track = Track(self.chunk_size, filename=filename)
         self.tracklist.append(track)
         print(f'tracklist: {self.tracklist}\nadded {filename}')
         self.enqueue()
@@ -32,7 +31,7 @@ class Playlist:
         self.loading_tracklist.append(url)
 
         try:
-            track = Track(url=url)
+            track = Track(self.chunk_size, url=url)
         except FileNotFoundError:
             pass
         else:
@@ -127,14 +126,8 @@ class Playlist:
 
         if not track_slot.get_read():  # Track has not been loaded before
             print('queueing', track_slot)
+            track_slot.read_file()
             track_slot.set_read()
-            chunk = track_slot.read_chunk(self.chunk_size)
-
-            while chunk:
-                track_slot.get_chunk_queue().put(chunk)
-                chunk = track_slot.read_chunk(self.chunk_size)
-
-            track_slot.delete_file()
 
     def get_current_track(self):
         return self.current_track
@@ -146,13 +139,10 @@ class Playlist:
         return self.paused
 
     def reset_playtime(self):
-        self.play_time = 0
+        self.progress = 0
 
-    def get_play_time(self):
-        return self.play_time
-
-    def increment_play_time(self, milliseconds):
-        self.play_time += milliseconds / 1000
+    def increment_progress(self):
+        self.progress += 1
 
     def update(self):
         self.updated = True

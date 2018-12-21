@@ -35,7 +35,7 @@ class Player:
 
         self.update_time = 100  # in milleseconds
 
-        self.focused_items = []
+        self.focused_items = ()
 
         self.style = Style()
 
@@ -153,12 +153,10 @@ class Player:
 
         if not self.playlist.get_paused() and now_playing:
             now_playing_name = repr(now_playing)
-            now_playing_time = self.playlist.get_play_time()
             now_playing_length = now_playing.get_length()
 
-            progress = now_playing_time / now_playing_length * 1000
-
-            self.playlist.increment_play_time(self.update_time * 1.01)  # account for slight lag
+            progress = self.playlist.progress / now_playing.get_num_chunks()
+            now_playing_time = progress * now_playing_length
 
         else:  # idle
             now_playing_name = 'Idle'
@@ -168,7 +166,7 @@ class Player:
 
         # update progress bar and label
         if not self.playlist.get_paused():
-            self.progress_bar['value'] = progress
+            self.progress_bar['value'] = progress * 1000
             self.progress_label.config(
                 text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
 
@@ -184,7 +182,7 @@ class Player:
             if self.focused_items:
                 for index in self.focused_items:
                     self.playlist_tree.selection_add(index)
-                self.focused_items = []
+                self.focused_items = ()
 
             self.playlist.update()
 
@@ -203,7 +201,7 @@ class Player:
             return
         elif selected:
             self.playlist.move_tracks_up((int(index) for index in reversed(selected)))
-            self.focused_items = [str(int(index) - 1) for index in selected]
+            self.focused_items = (str(int(index) - 1) for index in selected)
 
     def move_tracks_down(self):
         selected = self.playlist_tree.selection()
@@ -212,7 +210,7 @@ class Player:
             return
         elif selected:
             self.playlist.move_tracks_down((int(index) for index in reversed(selected)))
-            self.focused_items = [str(int(index) + 1) for index in selected]
+            self.focused_items = (str(int(index) + 1) for index in selected)
 
 
 def run_player(user_params, playlist):

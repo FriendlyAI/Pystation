@@ -6,7 +6,7 @@ from parse_audio import validate, youtube_download
 
 
 class Track:
-    def __init__(self, filename=None, url=None):
+    def __init__(self, chunk_size, filename=None, url=None):
         if filename and isfile(filename):
             self.trackname, self.filename, self.length = validate(filename)
         elif url:
@@ -15,11 +15,24 @@ class Track:
         if not self.filename:  # file failed to download/validate
             raise FileNotFoundError
 
+        self.chunk_size = chunk_size
+
         self.file_reader = open(self.filename, 'rb')
 
         self.chunk_queue = Queue()
 
         self.read = False
+
+        self.num_chunks = 0
+
+    def read_file(self):
+        chunk = self.read_chunk(self.chunk_size)
+        while chunk:
+            self.chunk_queue.put(chunk)
+            chunk = self.read_chunk(self.chunk_size)
+            self.num_chunks += 1
+
+        self.delete_file()
 
     def read_chunk(self, chunk_size):
         return self.file_reader.read(chunk_size)
@@ -39,6 +52,9 @@ class Track:
 
     def get_length(self):
         return self.length
+
+    def get_num_chunks(self):
+        return self.num_chunks
 
     def get_chunk_queue(self):
         return self.chunk_queue
