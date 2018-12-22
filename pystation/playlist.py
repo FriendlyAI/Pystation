@@ -5,7 +5,7 @@ from track import Track
 class Playlist:
     def __init__(self, chunk_size):
         self.tracklist = []  # list of upcoming Track objects
-        self.loading_tracklist = []  # list of urls (filenames?) still being loaded
+        self.loading_tracklist = []  # list of urls (TODO filenames?) still being loaded
 
         self.current_track = None  # Track object
         self.next_track = None  # Track object
@@ -94,7 +94,7 @@ class Playlist:
         """
 
         if not self.current_track or self.current_track.get_chunk_queue().empty():
-            self.reset_playtime()
+            self.reset_progress()
             if not self.next_track:
                 if len(self.tracklist) > 0:
                     self.load_next_track(True)
@@ -116,7 +116,7 @@ class Playlist:
         if now_playing:  # loaded track is playing now, remove from track queue
             self.current_track = self.remove_track(0)
             track_slot = self.current_track
-            self.reset_playtime()
+            self.reset_progress()
         else:  # preloading next track, keep in queue
             if len(self.tracklist) < 1:
                 self.next_track = None
@@ -138,7 +138,7 @@ class Playlist:
     def get_paused(self):
         return self.paused
 
-    def reset_playtime(self):
+    def reset_progress(self):
         self.progress = 0
 
     def increment_progress(self):

@@ -1,16 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Pystation Radio</title>
-    Placeholder
-    <!--
-    <audio preload="auto" autobuffer>
-        <source src="" />
-    </audio>
-    -->
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8">
+        <title>Pystation Radio</title>
+    </head>
 
-</body>
+    <body style="background-color:gray">
+        <center>
+            <audio id="stream">
+                <source src="http://pystation.mynetgear.com/main"/>
+            </audio>
+            <input type="button" id="play_button" onclick="play()" value="Play">
+            <br>
+            <div class="slidecontainer">
+                <input type="range" min="0" max="100" value="80" class="slider" id="volume">
+            </div>
+        </center>
+
+
+        <script>
+            var slider = document.getElementById("volume");
+            var stream = document.getElementById("stream");
+            stream.volume = slider.value / 100;
+
+            slider.oninput = function() {
+              stream.volume = this.value / 100;
+            }
+        </script>
+
+        <script>
+            function play() {
+              var stream = document.getElementById("stream");
+              var button = document.getElementById("play_button");
+              if (stream.paused) {
+                stream.load();
+                stream.play();
+                button.value = "Pause";
+              } else {
+                stream.pause();
+                button.value = "Play";
+              }
+            }
+        </script>
+    </body>
 </html>
