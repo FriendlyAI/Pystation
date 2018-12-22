@@ -1,4 +1,4 @@
-# Pystation
+# Pystation ![](docs/favicon/32.png)
 
 ## System Requirements
 
