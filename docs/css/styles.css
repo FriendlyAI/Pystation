@@ -13,7 +13,7 @@ body {
 input[type=button] {
   font-size: 18px;
   background-color: #3776a7;
-  border: none;
+  border: 1px solid #fafbfc;
   color: white;
   height: 40px;
   width: 80px;
@@ -42,6 +42,7 @@ input[type=range] {
   outline: none;
   -webkit-transition: .2s;
   transition: opacity .2s;
+  border: 1px solid #fafbfc;
 }
 
 input[type=range]::-webkit-slider-thumb {

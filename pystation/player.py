@@ -21,7 +21,7 @@ class Player:
             self.scale = 2
 
         self.width = 600 * self.scale
-        self.height = 400 * self.scale
+        self.height = 425 * self.scale
 
         self.x_center = master.winfo_screenwidth() / 2 - self.width / 2
         self.y_center = master.winfo_screenheight() / 2 - self.height / 2
@@ -39,11 +39,11 @@ class Player:
 
         self.style = Style()
 
-        self.upload_button = Button(self.master, text='Upload', command=self.choose_upload)
+        self.upload_button = Button(self.master, text='Upload', takefocus=False, command=self.choose_upload)
 
-        self.pause_button = Button(self.master, text='Pause', command=self.toggle_pause)
+        self.pause_button = Button(self.master, text='Pause', takefocus=False, command=self.toggle_pause)
 
-        self.skip_button = Button(self.master, text='Skip', command=self.skip)
+        self.skip_button = Button(self.master, text='Skip', takefocus=False, command=self.skip)
 
         self.now_playing_label_text = StringVar()
 
@@ -62,15 +62,18 @@ class Player:
 
         self.playlist_frame_controls = Frame(self.playlist_frame)
 
-        self.playlist_tree = Treeview(self.playlist_frame_display, height=12, columns='Length', selectmode='extended')
+        self.playlist_tree = Treeview(self.playlist_frame_display, height=10, columns='Length', selectmode='extended')
 
         self.playlist_scrollbar = Scrollbar(self.playlist_frame_display, command=self.playlist_tree.yview)
 
-        self.move_tracks_up_button = Button(self.playlist_frame_controls, text='Up', command=self.move_tracks_up)
+        self.move_tracks_up_button = Button(self.playlist_frame_controls, text='Up', takefocus=False,
+                                            command=self.move_tracks_up)
 
-        self.move_tracks_down_button = Button(self.playlist_frame_controls, text='Down', command=self.move_tracks_down)
+        self.move_tracks_down_button = Button(self.playlist_frame_controls, text='Down', takefocus=False,
+                                              command=self.move_tracks_down)
 
-        self.remove_track_button = Button(self.playlist_frame_controls, text='Remove', command=self.remove_tracks)
+        self.remove_track_button = Button(self.playlist_frame_controls, text='Remove', takefocus=False,
+                                          command=self.remove_tracks)
 
         self.init_ui()
 
@@ -135,6 +138,8 @@ class Player:
         self.playlist.skip_track()
 
     def youtube_download(self, url):
+        if not url:
+            return
         if '&list' in url:  # don't download playlist
             url = url[:url.index('&list')]
         self.playlist.add_youtube_track(url)
@@ -196,21 +201,28 @@ class Player:
 
     def move_tracks_up(self):
         selected = self.playlist_tree.selection()
+        tree_length = len(self.playlist_tree.get_children())
 
         if '0' in selected:  # can't move up
             return
         elif selected:
-            self.playlist.move_tracks_up((int(index) for index in reversed(selected)))
-            self.focused_items = (str(int(index) - 1) for index in selected)
+            selected = [int(index) for index in selected]
+            self.playlist.move_tracks_up(selected)
+            self.focused_items = (str(index - 1) for index in selected)
+            print(selected[0], tree_length)
+            self.playlist_tree.yview_moveto((selected[0] - 1) / tree_length)
 
     def move_tracks_down(self):
         selected = self.playlist_tree.selection()
+        tree_length = len(self.playlist_tree.get_children())
 
-        if str(len(self.playlist_tree.get_children()) - 1) in selected:  # can't move down
+        if str(tree_length - 1) in selected:  # can't move down
             return
         elif selected:
-            self.playlist.move_tracks_down((int(index) for index in reversed(selected)))
-            self.focused_items = (str(int(index) + 1) for index in selected)
+            selected = [int(index) for index in selected]
+            self.playlist.move_tracks_down(reversed(selected))
+            self.focused_items = (str(index + 1) for index in selected)
+            self.playlist_tree.yview_moveto((selected[-1] + 1) / tree_length)
 
 
 def run_player(user_params, playlist):

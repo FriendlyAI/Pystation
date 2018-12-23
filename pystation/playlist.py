@@ -95,17 +95,16 @@ class Playlist:
 
         if not self.current_track or self.current_track.get_chunk_queue().empty():
             self.reset_progress()
-            if not self.next_track:
+            if self.next_track:
+                self.current_track = self.next_track
+                self.remove_track(0)
+                return True
+            else:
                 if len(self.tracklist) > 0:
                     self.load_next_track(True)
                 else:
                     self.current_track = None
                 return False
-            else:
-                self.current_track = self.next_track
-                self.remove_track(0)
-                self.load_next_track(False)
-                return True
 
         elif not self.next_track and len(self.tracklist) > 0:
             self.load_next_track(False)
@@ -127,7 +126,6 @@ class Playlist:
         if not track_slot.get_read():  # Track has not been loaded before
             print('queueing', track_slot)
             track_slot.read_file()
-            track_slot.set_read()
 
     def get_current_track(self):
         return self.current_track

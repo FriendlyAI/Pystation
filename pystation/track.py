@@ -33,6 +33,7 @@ class Track:
             self.num_chunks += 1
 
         self.delete_file()
+        self.read = True
 
     def read_chunk(self, chunk_size):
         return self.file_reader.read(chunk_size)
@@ -40,9 +41,9 @@ class Track:
     def delete_file(self):
         try:
             remove(self.filename)
-            print(f'loaded {self.trackname}|{self.filename} and deleted')
+            print(f'deleted {self.trackname}|{self.filename}')
         except FileNotFoundError:  # file already removed
-            print(f'couldnt delete {self.trackname}|{self.filename}')
+            print(f'couldn\'t delete {self.trackname}|{self.filename}')
 
     def get_trackname(self):
         return self.trackname
@@ -64,9 +65,6 @@ class Track:
 
     def get_read(self):
         return self.read
-
-    def set_read(self):
-        self.read = True
 
     def __repr__(self):
         if self.trackname:
