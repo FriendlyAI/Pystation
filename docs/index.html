@@ -8,11 +8,12 @@
 </head>
 
 <body>
+    <audio id="stream" preload="none">
+        <source src="http://pystation.mynetgear.com/main"/>
+    </audio>
+
     <center>
         <br>
-        <audio id="stream" preload="none">
-            <source src="http://pystation.mynetgear.com/main"/>
-        </audio>
         <input type="button" id="play_button" onclick="play()" value="Play">
         <br>
         <br>
@@ -20,7 +21,6 @@
             <input type="range" min="0" max="100" value="80" class="slider" id="volume">
         </div>
     </center>
-
 
     <script>
         var slider = document.getElementById("volume");

@@ -48,6 +48,7 @@ class Player:
         self.now_playing_label_text = StringVar()
 
         self.now_playing_label = Label(self.master, background='gray92', textvariable=self.now_playing_label_text)
+        # TODO multiline overflow (message or text widget)
 
         self.progress_bar = Progressbar(self.master, orient='horizontal', length=300 * self.scale, mode='determinate',
                                         maximum=1000)
@@ -209,7 +210,6 @@ class Player:
             selected = [int(index) for index in selected]
             self.playlist.move_tracks_up(selected)
             self.focused_items = (str(index - 1) for index in selected)
-            print(selected[0], tree_length)
             self.playlist_tree.yview_moveto((selected[0] - 1) / tree_length)
 
     def move_tracks_down(self):

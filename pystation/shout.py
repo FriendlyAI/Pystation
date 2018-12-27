@@ -53,6 +53,7 @@ class Shouter(Thread):
         # connection.free()
 
     def run(self):
+        # TODO catch errors and allow for reconnect
         with shouty.connect(**self.params) as connection:
             print('connected')
             while not self.killed.is_set():
@@ -64,5 +65,5 @@ class Shouter(Thread):
         self.killed.set()
 
     def join(self, timeout=0):
-        self.killed.set()
+        self.kill()
         super(Shouter, self).join(timeout)

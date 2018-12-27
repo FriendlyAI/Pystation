@@ -16,7 +16,8 @@ if __name__ == '__main__':
     shouter = Shouter(user_params, playlist_)
     shouter.start()
 
-    # consider putting shouter object inside player object so player can update user with connection status/reconnect
+    # TODO consider putting shouter object inside player object so player can update user with connection
+    #  status/reconnect
 
     run_player(user_params, playlist_)
 

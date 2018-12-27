@@ -25,6 +25,8 @@ class Track:
 
         self.num_chunks = 0
 
+        # TODO override track name
+
     def read_file(self):
         chunk = self.read_chunk(self.chunk_size)
         while chunk:
