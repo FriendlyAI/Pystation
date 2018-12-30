@@ -1,4 +1,5 @@
 from threading import Thread, Event
+from time import sleep
 
 import shouty
 
@@ -26,13 +27,29 @@ class Shouter(Thread):
 
         self.chunk_size = user_params.getint('ICECAST', 'ChunkSize')
 
+        self.connected = False
+
         self.playlist = playlist
 
         self.killed = Event()
         self.killed.clear()
 
-        self.idle = open(f'{user_params.get("GENERAL", "IDLE")}', 'rb')
+        self.idle = open(user_params.get('GENERAL', 'IDLE'), 'rb')
         # check if idle is correct format
+
+    def connect(self):
+        # TODO catch errors and allow for reconnect
+        try:
+            with shouty.connect(**self.params) as connection:
+                self.connected = True
+                while not self.killed.is_set():
+                    self.send_chunk(connection)
+                # connection.close()
+        except Exception as e:
+            print(f'{e}\nreconnecting...')
+            sleep(5)  # wait for 5 seconds before trying to connect again
+
+        self.connected = False
 
     def send_chunk(self, connection):
         current_queue = self.playlist.current_chunk_queue()
@@ -53,17 +70,13 @@ class Shouter(Thread):
         # connection.free()
 
     def run(self):
-        # TODO catch errors and allow for reconnect
-        with shouty.connect(**self.params) as connection:
-            print('connected')
-            while not self.killed.is_set():
-                self.send_chunk(connection)
+        while not self.killed.is_set():
+            if not self.connected:
+                self.connect()
 
-        print('disconnected')
-
-    def kill(self):
-        self.killed.set()
+    def get_connected(self):
+        return self.connected
 
     def join(self, timeout=0):
-        self.kill()
+        self.killed.set()
         super(Shouter, self).join(timeout)

@@ -1,19 +1,24 @@
 import os
 from platform import system
-from tkinter import Tk, filedialog, StringVar
+from tkinter import Tk, filedialog, StringVar, Message
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style
 
+from shout import Shouter
 from thread_decorator import thread
 
-filetypes = ('.mp3', '.flac', '.ogg', '.m4a', '.webm', '.mp4')
-FILEDIALOG_TYPES = ' '.join(f'*{filetype}' for filetype in filetypes)
+filetypes = ('*.mp3', '*.flac', '*.ogg', '*.aac', '*.webm', '*.mp4')
+FILEDIALOG_TYPES = ' '.join(filetypes)
 
 
 class Player:
-    def __init__(self, master, user_params, playlist):
+    def __init__(self, root, user_params, playlist):
         # Window initialization
 
-        self.master = master
+        self.root = root
+        self.root.protocol('WM_DELETE_WINDOW', self.disconnect)
+
+        self.shouter = Shouter(user_params, playlist)
+        self.shouter.start()
 
         self.scale = 1
 
@@ -23,11 +28,13 @@ class Player:
         self.width = 600 * self.scale
         self.height = 425 * self.scale
 
-        self.x_center = master.winfo_screenwidth() / 2 - self.width / 2
-        self.y_center = master.winfo_screenheight() / 2 - self.height / 2
+        self.x_center = root.winfo_screenwidth() / 2 - self.width / 2
+        self.y_center = root.winfo_screenheight() / 2 - self.height / 2
 
-        self.master.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
-        self.master.title(f'Pystation@{user_params.get("ICECAST", "Host")}{user_params.get("ICECAST", "Mount")}')
+        self.root.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
+
+        self.host = user_params.get('ICECAST', 'Host')
+        self.mount = user_params.get('ICECAST', 'Mount')
 
         self.playlist = playlist
 
@@ -39,25 +46,25 @@ class Player:
 
         self.style = Style()
 
-        self.upload_button = Button(self.master, text='Upload', takefocus=False, command=self.choose_upload)
+        self.upload_button = Button(self.root, text='Upload', takefocus=False, command=self.choose_upload)
 
-        self.pause_button = Button(self.master, text='Pause', takefocus=False, command=self.toggle_pause)
+        self.pause_button = Button(self.root, text='Pause', takefocus=False, command=self.toggle_pause)
 
-        self.skip_button = Button(self.master, text='Skip', takefocus=False, command=self.skip)
+        self.skip_button = Button(self.root, text='Skip', takefocus=False, command=self.skip)
 
         self.now_playing_label_text = StringVar()
 
-        self.now_playing_label = Label(self.master, background='gray92', textvariable=self.now_playing_label_text)
-        # TODO multiline overflow (message or text widget)
+        self.now_playing_label = Message(self.root, width=500 * self.scale, justify='center', background='gray92',
+                                         textvariable=self.now_playing_label_text)
 
-        self.progress_bar = Progressbar(self.master, orient='horizontal', length=300 * self.scale, mode='determinate',
+        self.progress_bar = Progressbar(self.root, orient='horizontal', length=300 * self.scale, mode='determinate',
                                         maximum=1000)
 
-        self.progress_label = Label(self.master, font='Menlo', background='gray92')
+        self.progress_label = Label(self.root, font='Menlo', background='gray92')
 
-        self.youtube_input = Entry(self.master, width=40, font='Menlo')
+        self.youtube_input = Entry(self.root, width=40, font='Menlo')
 
-        self.playlist_frame = Frame(self.master)
+        self.playlist_frame = Frame(self.root)
 
         self.playlist_frame_display = Frame(self.playlist_frame)
 
@@ -155,6 +162,10 @@ class Player:
             else:
                 return '{:02d}:{:02d}'.format(minutes, seconds)
 
+        connection_status = chr(10003) if self.shouter.get_connected() else chr(10005)
+
+        self.root.title(f'{connection_status} Pystation@{self.host}{self.mount}')
+
         now_playing = self.playlist.get_current_track()  # Track object
 
         if not self.playlist.get_paused() and now_playing:
@@ -192,7 +203,7 @@ class Player:
 
             self.playlist.update()
 
-        self.master.after(self.update_time, self.update_player)
+        self.root.after(self.update_time, self.update_player)
 
     def remove_tracks(self):
         selected = self.playlist_tree.selection()
@@ -223,6 +234,10 @@ class Player:
             self.playlist.move_tracks_down(reversed(selected))
             self.focused_items = (str(index + 1) for index in selected)
             self.playlist_tree.yview_moveto((selected[-1] + 1) / tree_length)
+
+    def disconnect(self):
+        self.shouter.join()
+        self.root.destroy()
 
 
 def run_player(user_params, playlist):
