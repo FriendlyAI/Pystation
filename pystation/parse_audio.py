@@ -1,10 +1,12 @@
 from os import getcwd, remove, rename
 from shutil import copyfile
 
-import youtube_dl
 from ffmpy import FFmpeg
+from ffmpy import FFRuntimeError
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
+from mutagen.mp4 import MP4
+from youtube_dl import YoutubeDL
 
 ydl_opts = {
     'format': 'bestaudio/best',
@@ -16,7 +18,7 @@ ydl_opts = {
     'outtmpl': 'temp/%(title)s.%(ext)s'
 }
 
-YDL = youtube_dl.YoutubeDL(ydl_opts)
+YDL = YoutubeDL(ydl_opts)
 
 CACHE = set()
 
@@ -26,7 +28,10 @@ def convert_to_mp3(filename, temp_filename):
         inputs={filename: '-y'},
         outputs={temp_filename: '-vn -ab 192k -ar 44100 -ac 2 -map_metadata -1 -map 0:a'}
     )
-    ff.run()
+    try:
+        ff.run()
+    except FFRuntimeError:
+        print('error converting file to mp3. check there is an audio stream?')
 
 
 def reformat_mp3(filename, temp_filename):
@@ -61,26 +66,21 @@ def get_tags(filename, temp=False):
             artist = id3.get('ARTIST', [''])[0]
             title = id3.get('TITLE', [''])[0]
 
-        elif extension == '.aac':
-            # TODO get tags
-            artist = ''
-            title = ''
-
-        elif extension == '.webm':
-            artist = ''
-            title = ''
-
         elif extension == '.mp4':
-            artist = ''
-            title = ''
+            tags = MP4(filename).tags
+            artist = tags.get('\xa9ART', [''])[0]
+            title = tags.get('\xa9nam', [''])[0]
 
-        else:  # should never be called
+        else:  # aac, webm, etc
             artist = ''
             title = ''
 
         convert_to_mp3(filename, temp_filename)
 
-    return f'{artist + " - " if artist else ""}{title}' if title else '', temp_filename
+    if artist or title:
+        return f'{artist if artist else "<UNKNOWN>"} - {title if title else "<UNKNOWN>"}', temp_filename
+    else:
+        return '', temp_filename
 
 
 def clear_tags(filename):
@@ -115,4 +115,5 @@ def youtube_download(url):
         info = YDL.extract_info(url, download=True)
         filename = YDL.prepare_filename(info)
         filepath = f'{getcwd()}/{filename[:filename.rindex(".")]}.mp3'
+
         return validate(filepath, temp=True, cache_url=url)

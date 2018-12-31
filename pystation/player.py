@@ -33,14 +33,13 @@ class Player:
 
         self.root.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
 
-        self.host = user_params.get('ICECAST', 'Host')
-        self.mount = user_params.get('ICECAST', 'Mount')
-
         self.playlist = playlist
 
         self.chunk_size = user_params.getint('ICECAST', 'ChunkSize')
+        self.host = user_params.get('ICECAST', 'Host')
+        self.mount = user_params.get('ICECAST', 'Mount')
 
-        self.update_time = 100  # in milleseconds
+        self.update_time = 100  # milleseconds
 
         self.focused_items = ()
 

@@ -38,7 +38,6 @@ class Shouter(Thread):
         # check if idle is correct format
 
     def connect(self):
-        # TODO catch errors and allow for reconnect
         try:
             with shouty.connect(**self.params) as connection:
                 self.connected = True
