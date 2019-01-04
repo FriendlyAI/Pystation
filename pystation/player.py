@@ -3,6 +3,7 @@ from platform import system
 from tkinter import Tk, filedialog, StringVar, Message
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style
 
+from recorder import Recorder
 from shout import Shouter
 from thread_decorator import thread
 
@@ -12,13 +13,23 @@ FILEDIALOG_TYPES = ' '.join(filetypes)
 
 class Player:
     def __init__(self, root, user_params, playlist):
+
+        # TODO add sections for organization
+
         # Window initialization
 
         self.root = root
         self.root.protocol('WM_DELETE_WINDOW', self.disconnect)
 
+        # TODO make threads daemons?
+
         self.shouter = Shouter(user_params, playlist)
         self.shouter.start()
+
+        self.recorder = Recorder()  # TODO put init speaker, mic in config
+        self.recorder.start()
+
+        self.recording = False
 
         self.scale = 1
 
@@ -26,7 +37,7 @@ class Player:
             self.scale = 2
 
         self.width = 600 * self.scale
-        self.height = 425 * self.scale
+        self.height = 450 * self.scale
 
         self.x_center = root.winfo_screenwidth() / 2 - self.width / 2
         self.y_center = root.winfo_screenheight() / 2 - self.height / 2
@@ -50,6 +61,12 @@ class Player:
         self.pause_button = Button(self.root, text='Pause', takefocus=False, command=self.toggle_pause)
 
         self.skip_button = Button(self.root, text='Skip', takefocus=False, command=self.skip)
+
+        self.record_speaker_button = Button(self.root, text='Record', takefocus=False,
+                                            command=self.record_speaker)
+
+        self.record_microphone_button = Button(self.root, text='Record', takefocus=False,
+                                               command=self.record_microphone)
 
         self.now_playing_label_text = StringVar()
 
@@ -96,6 +113,8 @@ class Player:
 
         self.skip_button.pack()
 
+        self.record_speaker_button.pack()
+
         self.now_playing_label.pack(pady=10 * self.scale)
 
         self.progress_bar.pack()
@@ -130,7 +149,7 @@ class Player:
     def choose_upload(self):
         filenames = filedialog.askopenfilenames(initialdir=f'{os.environ["HOME"]}/Downloads',
                                                 title='Select File',
-                                                filetypes=([('Audio', FILEDIALOG_TYPES)]))
+                                                filetypes=[('Audio', FILEDIALOG_TYPES)])
         [self.playlist.add_track(filename) for filename in filenames]
 
     def toggle_pause(self):
@@ -234,8 +253,21 @@ class Player:
             self.focused_items = (str(index + 1) for index in selected)
             self.playlist_tree.yview_moveto((selected[-1] + 1) / tree_length)
 
+    def record_speaker(self):
+        self.recording = not self.recording
+        print('toggle record speaker')
+
+        self.playlist.record_speaker(self.recording, self.recorder)
+        self.recorder.set_recording_speaker(self.recording)
+
+        # TODO disable other buttons
+
+    def record_microphone(self):
+        pass
+
     def disconnect(self):
         self.shouter.join()
+        # self.recorder.join()
         self.root.destroy()
 
 

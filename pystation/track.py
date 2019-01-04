@@ -11,13 +11,17 @@ class Track:
             self.trackname, self.filename, self.length = validate(filename)
         elif url:
             self.trackname, self.filename, self.length = youtube_download(url)
+        else:
+            self.filename = None
 
-        if not self.filename:  # file failed to download/validate
-            raise FileNotFoundError
+        # if not self.filename:  # file failed to download/validate
+        #     raise FileNotFoundError
+        if self.filename:
+            self.file_reader = open(self.filename, 'rb')
+        else:
+            self.trackname = 'Microphone/Speaker'
 
         self.chunk_size = chunk_size
-
-        self.file_reader = open(self.filename, 'rb')
 
         self.chunk_queue = Queue()
 
@@ -46,6 +50,12 @@ class Track:
             print(f'deleted {self.trackname}|{self.filename}')
         except FileNotFoundError:  # file already removed
             print(f'couldn\'t delete {self.trackname}|{self.filename}')
+
+    def add_chunk(self, chunk):
+        """
+        Used only for speaker/microphone
+        """
+        self.chunk_queue.put(chunk)
 
     def get_trackname(self):
         return self.trackname

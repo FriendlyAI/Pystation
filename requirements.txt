@@ -2,3 +2,6 @@ shouty>=0.1.dev6
 youtube_dl>=2018.11.23
 mutagen>=1.41.1
 ffmpy>=0.2.2
+lameenc>=1.0.0
+numpy>=1.15.4
+soundcard>=0.2.2

@@ -5,15 +5,18 @@ from track import Track
 class Playlist:
     def __init__(self, chunk_size):
         self.tracklist = []  # list of upcoming Track objects
-        self.loading_tracklist = []  # list of urls (TODO filenames?) still being loaded
+        self.loading_tracklist = []  # list of urls still being loaded
 
         self.current_track = None  # Track object
         self.next_track = None  # Track object
+        self.recording_track = None
         self.progress = 0  # number of read chunks this track
 
         self.chunk_size = chunk_size
         self.paused = False
         self.updated = True  # false tells GUI that tracklist needs updating
+
+        self.recording = False
 
     def get_tracks(self):
         return self.tracklist
@@ -76,22 +79,29 @@ class Playlist:
         return None
 
     def current_chunk_queue(self):
-        if not self.current_track or self.current_track.get_chunk_queue().empty():  # track ended, enqueue next
+        if self.recording:
+            return self.current_track.get_chunk_queue()
+
+        if not self.recording and (not self.current_track or self.current_track.get_chunk_queue().empty()):
+            # track ended, enqueue next
             if not self.enqueue():  # current track not ready/idling
                 return None
 
         return self.current_track.get_chunk_queue()
 
     def skip_track(self):
-        self.current_track = None
+        if not self.recording:
+            self.current_track = None
 
-        self.enqueue()
+            self.enqueue()
 
     def enqueue(self):
         """
         called when current_track finished or new track added
         returns True if new current_track ready to play
         """
+        if self.recording:
+            return True
 
         if not self.current_track or self.current_track.get_chunk_queue().empty():
             self.reset_progress()
@@ -112,7 +122,10 @@ class Playlist:
 
     @thread
     def load_next_track(self, now_playing):
-        if now_playing:  # loaded track is playing now, remove from track queue
+        if self.recording:
+            return
+
+        elif now_playing:  # loaded track is playing now, remove from track queue
             self.current_track = self.remove_track(0)
             track_slot = self.current_track
             self.reset_progress()
@@ -126,6 +139,13 @@ class Playlist:
         if not track_slot.get_read():  # Track has not been loaded before
             print('queueing', track_slot)
             track_slot.read_file()
+
+    @thread
+    def record_speaker(self, recording, recorder):
+        self.recording = recording
+        if self.recording:
+            self.recording_track = Track(0)
+            recorder.set_track(self.recording_track)
 
     def get_current_track(self):
         return self.current_track

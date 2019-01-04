@@ -45,36 +45,47 @@ class Shouter(Thread):
                     self.send_chunk(connection)
                 # connection.close()
         except Exception as e:
-            print(f'{e}\nreconnecting...')
+            print(f'SHOUTERR: {e}\nreconnecting...')
             sleep(5)  # wait for 5 seconds before trying to connect again
 
         self.connected = False
 
     def send_chunk(self, connection):
-        current_queue = self.playlist.current_chunk_queue()
+        if self.playlist.recording:
+            if self.playlist.recording_track.get_chunk_queue().empty():
+                chunk = self.get_idle_chunk()
+            else:
+                chunk = self.playlist.recording_track.get_chunk_queue().get()
 
-        if not current_queue or self.playlist.get_paused():  # nothing in queue or idling
-            chunk = self.idle.read(self.chunk_size)
-            if not chunk:
-                self.idle.seek(0)
-                chunk = self.idle.read(self.chunk_size)
+        else:
+            current_queue = self.playlist.current_chunk_queue()
 
-        else:  # current track playing
-            chunk = current_queue.get()
-            self.playlist.increment_progress()
+            if not current_queue or self.playlist.get_paused():  # nothing in queue or idling
+                chunk = self.get_idle_chunk()
+
+            else:  # current track playing
+                chunk = current_queue.get()
+                self.playlist.increment_progress()
 
         # print(chunk[:10])
         connection.send(chunk)
         connection.sync()
         # connection.free()
 
+    def get_idle_chunk(self):
+        chunk = self.idle.read(self.chunk_size)
+        if not chunk:
+            self.idle.seek(0)
+            chunk = self.idle.read(self.chunk_size)
+        return chunk
+
+    def get_connected(self):
+        return self.connected
+
     def run(self):
         while not self.killed.is_set():
             if not self.connected:
                 self.connect()
-
-    def get_connected(self):
-        return self.connected
 
     def join(self, timeout=0):
         self.killed.set()
