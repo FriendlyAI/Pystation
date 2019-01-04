@@ -21,15 +21,14 @@ class Player:
         self.root = root
         self.root.protocol('WM_DELETE_WINDOW', self.disconnect)
 
-        # TODO make threads daemons?
-
         self.shouter = Shouter(user_params, playlist)
         self.shouter.start()
 
         self.recorder = Recorder()  # TODO put init speaker, mic in config
         self.recorder.start()
 
-        self.recording = False
+        self.recording_speaker = False
+        self.recording_microphone = False
 
         self.scale = 1
 
@@ -37,7 +36,7 @@ class Player:
             self.scale = 2
 
         self.width = 600 * self.scale
-        self.height = 450 * self.scale
+        self.height = 475 * self.scale
 
         self.x_center = root.winfo_screenwidth() / 2 - self.width / 2
         self.y_center = root.winfo_screenheight() / 2 - self.height / 2
@@ -62,10 +61,20 @@ class Player:
 
         self.skip_button = Button(self.root, text='Skip', takefocus=False, command=self.skip)
 
-        self.record_speaker_button = Button(self.root, text='Record', takefocus=False,
+        self.recorder_frame = Frame(self.root)
+
+        self.speaker_frame = Frame(self.recorder_frame)
+
+        self.microphone_frame = Frame(self.recorder_frame)
+
+        self.speaker_label = Label(self.speaker_frame, text='Speaker')
+
+        self.record_speaker_button = Button(self.speaker_frame, text=f'{chr(10005)}', takefocus=False,
                                             command=self.record_speaker)
 
-        self.record_microphone_button = Button(self.root, text='Record', takefocus=False,
+        self.microphone_label = Label(self.microphone_frame, text='Microphone')
+
+        self.record_microphone_button = Button(self.microphone_frame, text=f'{chr(10005)}', takefocus=False,
                                                command=self.record_microphone)
 
         self.now_playing_label_text = StringVar()
@@ -113,7 +122,19 @@ class Player:
 
         self.skip_button.pack()
 
+        self.recorder_frame.pack()
+
+        self.speaker_frame.pack(side='left')
+
+        self.microphone_frame.pack(side='right')
+
+        self.speaker_label.pack()
+
         self.record_speaker_button.pack()
+
+        self.microphone_label.pack()
+
+        self.record_microphone_button.pack()
 
         self.now_playing_label.pack(pady=10 * self.scale)
 
@@ -163,6 +184,36 @@ class Player:
     def skip(self):
         self.playlist.skip_track()
 
+    def record_speaker(self):
+        self.recording_speaker = not self.recording_speaker
+
+        if self.recording_speaker:
+            status = chr(10003)
+            # TODO disable other buttons
+        else:
+            status = chr(10005)
+            # enable buttons
+
+        self.record_speaker_button['text'] = status
+
+        self.playlist.record_speaker(self.recording_speaker, self.recorder)
+        self.recorder.set_recording_speaker(self.recording_speaker)
+
+    def record_microphone(self):
+        self.recording_microphone = not self.recording_microphone
+
+        if self.recording_speaker:
+            status = chr(10003)
+            # TODO disable other buttons
+        else:
+            status = chr(10005)
+            # enable buttons
+
+        self.record_microphone_button['text'] = status
+
+        self.playlist.record_microphone(self.recording_microphone, self.recorder)
+        self.recorder.set_recording_microphone(self.recording_microphone)
+
     def youtube_download(self, url):
         if not url:
             return
@@ -193,11 +244,16 @@ class Player:
             progress = self.playlist.progress / now_playing.get_num_chunks()
             now_playing_time = progress * now_playing_length
 
-        else:  # idle
-            now_playing_name = 'Idle'
+        else:  # idle or recording
+            if self.recording_speaker or self.recording_microphone:
+                progress = 1
+                now_playing_name = 'LIVE'
+            else:  # idle
+                progress = 0
+                now_playing_name = 'Idle'
+
             now_playing_time = 0
             now_playing_length = 0
-            progress = 0
 
         # update progress bar and label
         if not self.playlist.get_paused():
@@ -252,18 +308,6 @@ class Player:
             self.playlist.move_tracks_down(reversed(selected))
             self.focused_items = (str(index + 1) for index in selected)
             self.playlist_tree.yview_moveto((selected[-1] + 1) / tree_length)
-
-    def record_speaker(self):
-        self.recording = not self.recording
-        print('toggle record speaker')
-
-        self.playlist.record_speaker(self.recording, self.recorder)
-        self.recorder.set_recording_speaker(self.recording)
-
-        # TODO disable other buttons
-
-    def record_microphone(self):
-        pass
 
     def disconnect(self):
         self.recorder.join()

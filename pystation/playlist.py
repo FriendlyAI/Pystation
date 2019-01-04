@@ -16,7 +16,8 @@ class Playlist:
         self.paused = False
         self.updated = True  # false tells GUI that tracklist needs updating
 
-        self.recording = False
+        self.recording_speaker = False
+        self.recording_microphone = False
 
     def get_tracks(self):
         return self.tracklist
@@ -79,10 +80,11 @@ class Playlist:
         return None
 
     def current_chunk_queue(self):
-        if self.recording:
+        if self.recording_speaker or self.recording_microphone:
             return self.current_track.get_chunk_queue()
 
-        if not self.recording and (not self.current_track or self.current_track.get_chunk_queue().empty()):
+        if not (self.recording_speaker or self.recording_microphone) and \
+                (not self.current_track or self.current_track.get_chunk_queue().empty()):
             # track ended, enqueue next
             if not self.enqueue():  # current track not ready/idling
                 return None
@@ -90,7 +92,7 @@ class Playlist:
         return self.current_track.get_chunk_queue()
 
     def skip_track(self):
-        if not self.recording:
+        if not (self.recording_speaker or self.recording_microphone):
             self.current_track = None
 
             self.enqueue()
@@ -100,7 +102,7 @@ class Playlist:
         called when current_track finished or new track added
         returns True if new current_track ready to play
         """
-        if self.recording:
+        if self.recording_speaker or self.recording_microphone:
             return True
 
         if not self.current_track or self.current_track.get_chunk_queue().empty():
@@ -122,7 +124,7 @@ class Playlist:
 
     @thread
     def load_next_track(self, now_playing):
-        if self.recording:
+        if self.recording_speaker or self.recording_microphone:
             return
 
         elif now_playing:  # loaded track is playing now, remove from track queue
@@ -142,8 +144,15 @@ class Playlist:
 
     @thread
     def record_speaker(self, recording, recorder):
-        self.recording = recording
-        if self.recording:
+        self.recording_speaker = recording
+        if self.recording_speaker:
+            self.recording_track = Track(0)
+            recorder.set_track(self.recording_track)
+
+    @thread
+    def record_microphone(self, recording, recorder):
+        self.recording_microphone = recording
+        if self.recording_microphone:
             self.recording_track = Track(0)
             recorder.set_track(self.recording_track)
 

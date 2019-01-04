@@ -10,9 +10,17 @@ youtube-dl
 
 libshout2
 
+LAME
+
 ### Linux
 
 You must install tkinter using `sudo apt-get install python3-tk`
+
+### macOS
+
+Because macOS doesn't natively support loopback audio (recording from your speaker's output), it is recommended that you
+install Soundflower or similar loopback software and create an aggregate output device to stream to both your preferred
+output and the loopback.
 
 ## Config
 You can set your own default profile by creating a `conf.ini` file in the `config` folder. An example configure file is 

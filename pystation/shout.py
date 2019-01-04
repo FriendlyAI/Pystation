@@ -47,7 +47,7 @@ class Shouter(Thread):
         self.connected = False
 
     def send_chunk(self, connection):
-        if self.playlist.recording:
+        if self.playlist.recording_speaker or self.playlist.recording_microphone:
             if self.playlist.recording_track.get_chunk_queue().empty():
                 chunk = self.get_idle_chunk()
             else:
