@@ -1,8 +1,8 @@
 from os import getcwd, remove, rename
 from shutil import copyfile
 
-from ffmpy import FFmpeg
 from ffmpy import FFRuntimeError
+from ffmpy import FFmpeg
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4

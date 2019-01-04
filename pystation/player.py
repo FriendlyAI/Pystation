@@ -266,8 +266,7 @@ class Player:
         pass
 
     def disconnect(self):
-        self.shouter.join()
-        # self.recorder.join()
+        self.recorder.join()
         self.root.destroy()
 
 

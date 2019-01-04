@@ -1,10 +1,10 @@
 import lameenc
+import time
 from queue import Queue
 from threading import Thread, Event
 
 import soundcard
 from numpy import int16
-import time
 
 from thread_decorator import thread
 
@@ -36,27 +36,28 @@ class Recorder(Thread):
         self.killed = Event()
         self.killed.clear()
 
-        self.init_speaker('0')  # TODO remove
+        self.init_speaker('0')  # TODO remove, put in config screen
 
         print(soundcard.all_microphones(include_loopback=True))
 
-    def init_speaker(self, index):
-        # TODO index should already be string
-        self.speaker = soundcard.get_microphone(f'{index}', include_loopback=True)
-        if self.microphone and str(self.microphone) == str(self.speaker):
+    def init_speaker(self, id_):
+        # TODO check is speaker.channels >= 2, maybe simulate stereo with mono
+        self.speaker = soundcard.get_microphone(f'{id_}', include_loopback=True)
+
+        if self.microphone and self.microphone.id == self.speaker.id:
             self.speaker = None
             print('duplicate microphone and speaker')
 
-    def init_microphone(self, index):
-        # TODO index should already be string
-        self.microphone = soundcard.get_microphone(f'{index}', include_loopback=False)
-        if self.speaker and str(self.microphone) == str(self.speaker):
+    def init_microphone(self, id_):
+        self.microphone = soundcard.get_microphone(f'{id_}', include_loopback=False)
+
+        if self.speaker and self.microphone.id == self.speaker.id:
             self.microphone = None
             print('duplicate microphone and speaker')
 
     @thread
     def record_speaker_frames(self):
-        with self.speaker.recorder(44100, channels=[0, 2]) as r:
+        with self.speaker.recorder(44100, channels=[0, 1]) as r:
             while not self.killed.is_set() and self.recording_speaker:
                 numpy_frames = r.record(self.num_frames)
                 int16_frames = (numpy_frames * self.int16_max).astype(int16).clip(self.int16_min, self.int16_max)
@@ -91,7 +92,7 @@ class Recorder(Thread):
             self.record_speaker_frames()
 
     def run(self):
-        while not self.killed.is_set():
+        while True:
             if self.recording_speaker or self.recording_microphone:
                 self.add_chunk()
             else:
