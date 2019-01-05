@@ -156,7 +156,7 @@ class Player(Tk):
         self.progress_label.pack()
 
         self.youtube_input.bind('<Return>', func=lambda _: self.youtube_download(self.youtube_input.get()))
-        self.youtube_input.pack(pady=10 * self.scale)
+        self.youtube_input.pack(pady=20 * self.scale)
 
         self.playlist_frame.pack(side='bottom')
 
@@ -250,7 +250,7 @@ class Player(Tk):
         now_playing = self.playlist.get_current_track()  # Track object
 
         if self.playlist.is_recording():
-            progress = self.playlist.get_current_track().get_volume()
+            progress = self.recorder.get_volume()
             now_playing_name = 'LIVE'
 
             now_playing_time = 0

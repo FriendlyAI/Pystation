@@ -27,8 +27,6 @@ class Track:
 
         self.num_chunks = 0
 
-        self.volume = 1  # for live audio
-
         # TODO override track name manually
 
     def read_file(self):
@@ -77,12 +75,6 @@ class Track:
 
     def get_read(self):
         return self.read
-
-    def get_volume(self):
-        return self.volume
-
-    def set_volume(self, volume):
-        self.volume = volume
 
     def __repr__(self):
         if self.trackname:

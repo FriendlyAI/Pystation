@@ -32,6 +32,8 @@ class Recorder(Thread):
         self.microphone_queue = Queue()
         self.track = None
 
+        self.volume = 1.0
+
         self.amplification = 1.0
 
         self.killed = Event()
@@ -72,8 +74,6 @@ class Recorder(Thread):
         self.microphone_queue = Queue()  # clear queue
 
     def add_chunk(self):
-        # TODO scale audio slider
-
         if self.recording_speaker and self.recording_microphone:
             microphone_chunk = self.microphone_queue.get()
             speaker_chunk = self.speaker_queue.get()
@@ -96,7 +96,7 @@ class Recorder(Thread):
                 int16_frames = (int16_frames * amplification).astype(int16)
                 volume *= amplification
 
-            self.track.set_volume(volume)
+            self.volume = volume
 
             chunk = bytes(self.encoder.encode(int16_frames))
             self.track.add_chunk(chunk)
@@ -113,6 +113,9 @@ class Recorder(Thread):
         self.recording_microphone = recording_bool
         if self.recording_microphone:
             self.record_microphone_frames()
+
+    def get_volume(self):
+        return self.volume
 
     def set_amplification(self, amplification):
         self.amplification = amplification
