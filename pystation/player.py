@@ -2,7 +2,7 @@ from configparser import ConfigParser
 from os import environ
 from platform import system
 from tkinter import Tk, filedialog, StringVar, Message, messagebox
-from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style
+from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style, Scale
 
 from config import ConfigWindow
 from playlist import Playlist
@@ -89,6 +89,8 @@ class Player(Tk):
                                                text=f'Microphone {self.disconnected_symbol}',
                                                takefocus=False, command=self.record_microphone)
 
+        self.volume_scale = Scale(self, length=200 * self.scale, from_=0, to=2, value=1, command=self.set_volume)
+
         self.now_playing_label_text = StringVar()
 
         self.now_playing_label = Message(self, width=500 * self.scale, justify='center', background='gray92',
@@ -144,6 +146,8 @@ class Player(Tk):
         self.record_speaker_button.pack()
 
         self.record_microphone_button.pack()
+
+        self.volume_scale.pack()
 
         self.now_playing_label.pack(pady=10 * self.scale)
 
@@ -218,6 +222,9 @@ class Player(Tk):
         self.record_microphone_button['text'] = f'Microphone {status}'
 
         self.recorder.set_recording_microphone(self.playlist.is_recording_microphone())
+
+    def set_volume(self, volume):
+        self.recorder.set_amplification(float(volume))
 
     def youtube_download(self, url):
         if not url:

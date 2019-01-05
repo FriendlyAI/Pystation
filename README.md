@@ -39,6 +39,6 @@ web browsers).
 
 ## Troubleshooting
 If your listeners are hearing light static when you are streaming from your speakers or microphone, it is likely due to
-your output volume being too high.
+your (system, not Pystation) output volume being too high.
 
 ###### train train, i love pystation
