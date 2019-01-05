@@ -24,7 +24,7 @@ class Recorder(Thread):
 
         self.int16_max = 32767
         self.int16_min = -32768
-        self.num_frames = 10000
+        self.num_frames = 5000
 
         self.recording_speaker = False
         self.recording_microphone = False
@@ -81,14 +81,13 @@ class Recorder(Thread):
             int16_frames = (self.speaker_queue.get() * self.int16_max).astype(int16)
 
         else:  # only recording microphone
-
             int16_frames = (self.microphone_queue.get() * self.int16_max).astype(int16)
+
         if int16_frames.size != 0:
             volume = max(amax(int16_frames), abs(amin(int16_frames))) / self.int16_min * -1
             self.track.set_volume(volume)
 
             chunk = bytes(self.encoder.encode(int16_frames))
-
             self.track.add_chunk(chunk)
 
     def set_track(self, track):
@@ -109,7 +108,7 @@ class Recorder(Thread):
             if self.recording_speaker or self.recording_microphone:
                 self.add_chunk()
             else:
-                sleep(1)  # reduce CPU usage
+                sleep(.1)  # reduce CPU usage
 
     def join(self, timeout=0):
         self.killed.set()
