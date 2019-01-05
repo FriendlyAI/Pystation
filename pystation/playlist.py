@@ -9,7 +9,7 @@ class Playlist:
 
         self.current_track = None  # Track object
         self.next_track = None  # Track object
-        self.recording_track = None
+        self.live_track = None
         self.progress = 0  # number of read chunks this track
 
         self.chunk_size = chunk_size
@@ -80,11 +80,10 @@ class Playlist:
         return None
 
     def current_chunk_queue(self):
-        if self.recording_speaker or self.recording_microphone:
+        if self.is_recording():
             return self.current_track.get_chunk_queue()
 
-        if not (self.recording_speaker or self.recording_microphone) and \
-                (not self.current_track or self.current_track.get_chunk_queue().empty()):
+        if not self.is_recording() and (not self.current_track or self.current_track.get_chunk_queue().empty()):
             # track ended, enqueue next
             if not self.enqueue():  # current track not ready/idling
                 return None
@@ -92,7 +91,7 @@ class Playlist:
         return self.current_track.get_chunk_queue()
 
     def skip_track(self):
-        if not (self.recording_speaker or self.recording_microphone):
+        if not self.is_recording():
             self.current_track = None
 
             self.enqueue()
@@ -102,7 +101,7 @@ class Playlist:
         called when current_track finished or new track added
         returns True if new current_track ready to play
         """
-        if self.recording_speaker or self.recording_microphone:
+        if self.is_recording():
             return True
 
         if not self.current_track or self.current_track.get_chunk_queue().empty():
@@ -124,7 +123,7 @@ class Playlist:
 
     @thread
     def load_next_track(self, now_playing):
-        if self.recording_speaker or self.recording_microphone:
+        if self.is_recording():
             return
 
         elif now_playing:  # loaded track is playing now, remove from track queue
@@ -142,22 +141,34 @@ class Playlist:
             print('queueing', track_slot)
             track_slot.read_file()
 
-    @thread
-    def record_speaker(self, recording, recorder):
-        self.recording_speaker = recording
-        if self.recording_speaker:
-            self.recording_track = Track(0)
-            recorder.set_track(self.recording_track)
+    def record_speaker(self, recorder):
+        self.live_track = Track(0)
+        recorder.set_track(self.live_track)
 
-    @thread
-    def record_microphone(self, recording, recorder):
-        self.recording_microphone = recording
-        if self.recording_microphone:
-            self.recording_track = Track(0)
-            recorder.set_track(self.recording_track)
+    def record_microphone(self, recorder):
+        self.live_track = Track(0)
+        recorder.set_track(self.live_track)
+
+    def is_recording_speaker(self):
+        return self.recording_speaker
+
+    def toggle_recording_speaker(self):
+        self.recording_speaker = not self.recording_speaker
+
+    def is_recording_microphone(self):
+        return self.recording_microphone
+
+    def toggle_recording_microphone(self):
+        self.recording_microphone = not self.recording_microphone
+
+    def is_recording(self):
+        return self.recording_speaker or self.recording_microphone
 
     def get_current_track(self):
-        return self.current_track
+        if self.is_recording():
+            return self.live_track
+        else:
+            return self.current_track
 
     def set_paused(self, value):
         self.paused = value

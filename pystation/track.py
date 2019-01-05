@@ -14,8 +14,6 @@ class Track:
         else:
             self.filename = None
 
-        # if not self.filename:  # file failed to download/validate
-        #     raise FileNotFoundError
         if self.filename:
             self.file_reader = open(self.filename, 'rb')
         else:
@@ -28,6 +26,8 @@ class Track:
         self.read = False
 
         self.num_chunks = 0
+
+        self.volume = 1  # for live audio
 
         # TODO override track name manually
 
@@ -77,6 +77,12 @@ class Track:
 
     def get_read(self):
         return self.read
+
+    def get_volume(self):
+        return self.volume
+
+    def set_volume(self, volume):
+        self.volume = volume
 
     def __repr__(self):
         if self.trackname:

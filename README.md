@@ -13,11 +13,9 @@ libshout2
 LAME
 
 ### Linux
-
 You must install tkinter using `sudo apt-get install python3-tk`
 
 ### macOS
-
 Because macOS doesn't natively support loopback audio (recording from your speaker's output), it is recommended that you
 install Soundflower or similar loopback software and create an aggregate output device to stream to both your preferred
 output and the loopback.
@@ -31,5 +29,9 @@ queued. You may choose a different idle track by changing the idle file location
 
 Note: the idle track must be in the correct format or it may cause client disconnects on certain music players (like 
 web browsers).
+
+## Troubleshooting
+If your listeners are hearing light static when you are streaming from your speakers or microphone, it is likely due to
+your output volume being too high.
 
 ###### train train, i love pystation

@@ -4,14 +4,14 @@ from threading import Thread, Event
 from time import sleep
 
 import soundcard
-from numpy import int16, mean
+from numpy import int16, average, amax, amin
 
 from thread_decorator import thread
 
 
 class Recorder(Thread):
 
-    def __init__(self):
+    def __init__(self, speaker_id, microphone_id):
         super(Recorder, self).__init__(daemon=True)
 
         self.speaker = None
@@ -20,7 +20,7 @@ class Recorder(Thread):
         self.encoder = lameenc.Encoder()
         self.encoder.set_bit_rate(192)
         self.encoder.set_channels(2)
-        self.encoder.set_quality(2)
+        self.encoder.set_quality(7)
 
         self.int16_max = 32767
         self.int16_min = -32768
@@ -36,28 +36,19 @@ class Recorder(Thread):
         self.killed = Event()
         self.killed.clear()
 
-        self.init_speaker('0')  # TODO remove, put in config screen
-        self.init_microphone('0')  # TODO remove, put in config screen
+        self.init_speaker(speaker_id)
+        self.init_microphone(microphone_id)
 
-        print('loopbacks: ', soundcard.all_microphones(include_loopback=True))
-        print('not loopback: ', soundcard.all_microphones(include_loopback=False))
-
-    def init_speaker(self, id_):
+    def init_speaker(self, speaker_id):
         # TODO check is speaker.channels >= 2, maybe simulate stereo with mono
-        id_ = 'Soundflower'
-        self.speaker = soundcard.get_microphone(f'{id_}', include_loopback=True)
-        print(f'speaker: {self.speaker}')
-        # print(dir(self.speaker))
-        # print(self.speaker.channels, self.speaker.record(1000, 22050))
+        self.speaker = soundcard.get_microphone(int(speaker_id), include_loopback=True)
 
         if self.microphone and self.microphone.id == self.speaker.id:
             self.speaker = None
             print('duplicate microphone and speaker')
 
-    def init_microphone(self, id_):
-        id_ = 'Built-in'
-        self.microphone = soundcard.get_microphone(f'{id_}', include_loopback=False)
-        print(f'mic: {self.microphone}')
+    def init_microphone(self, microphone_id):
+        self.microphone = soundcard.get_microphone(int(microphone_id), include_loopback=False)
 
         if self.speaker and self.microphone.id == self.speaker.id:
             self.microphone = None
@@ -68,8 +59,7 @@ class Recorder(Thread):
         with self.speaker.recorder(44100, channels=[0, 1]) as speaker_recorder:
             while not self.killed.is_set() and self.recording_speaker:
                 numpy_frames = speaker_recorder.record(self.num_frames)
-                int16_frames = (numpy_frames * self.int16_max).astype(int16)  # .clip(self.int16_min, self.int16_max)
-                self.speaker_queue.put(int16_frames)
+                self.speaker_queue.put(numpy_frames)
         self.speaker_queue = Queue()  # clear queue
 
     @thread
@@ -77,24 +67,29 @@ class Recorder(Thread):
         with self.microphone.recorder(44100, channels=[0, 1]) as microphone_recorder:
             while not self.killed.is_set() and self.recording_microphone:
                 numpy_frames = microphone_recorder.record(self.num_frames)
-                int16_frames = (numpy_frames * self.int16_max).astype(int16)  # .clip(self.int16_min, self.int16_max)
-                self.microphone_queue.put(int16_frames)
+                self.microphone_queue.put(numpy_frames)
         self.microphone_queue = Queue()  # clear queue
 
     def add_chunk(self):
         if self.recording_speaker and self.recording_microphone:
             microphone_chunk = self.microphone_queue.get()
             speaker_chunk = self.speaker_queue.get()
-            mean_chunk = mean([microphone_chunk, speaker_chunk], axis=0, dtype=int16)
-            # TODO weighted average towards speaker?
+            int16_frames = (average([microphone_chunk, speaker_chunk], axis=0, weights=[5, 1])
+                            * self.int16_max).astype(int16)
 
-            chunk = bytes(self.encoder.encode(mean_chunk))
         elif self.recording_speaker:
-            chunk = bytes(self.encoder.encode(self.speaker_queue.get()))
-        else:  # only recording microphone
-            chunk = bytes(self.encoder.encode(self.microphone_queue.get()))
+            int16_frames = (self.speaker_queue.get() * self.int16_max).astype(int16)
 
-        self.track.add_chunk(chunk)
+        else:  # only recording microphone
+
+            int16_frames = (self.microphone_queue.get() * self.int16_max).astype(int16)
+        if int16_frames.size != 0:
+            volume = max(amax(int16_frames), abs(amin(int16_frames))) / self.int16_min * -1
+            self.track.set_volume(volume)
+
+            chunk = bytes(self.encoder.encode(int16_frames))
+
+            self.track.add_chunk(chunk)
 
     def set_track(self, track):
         self.track = track

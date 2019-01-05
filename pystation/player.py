@@ -27,9 +27,8 @@ class Player(Tk):
 
         # Window initialization
 
-        # root.deiconify()
-        # self.root = root
-        # self.root.deiconify()
+        if int(user_params.get('SYSTEM', 'toplevel')):
+            self.call('wm', 'attributes', '.', '-topmost', '1')  # keep window on top
 
         self.scale = 1
 
@@ -42,10 +41,11 @@ class Player(Tk):
         self.x_center = self.winfo_screenwidth() / 2 - self.width / 2
         self.y_center = self.winfo_screenheight() / 2 - self.height / 2
 
-        self.recorder = Recorder()  # TODO put init speaker, mic in config
-        self.recorder.start()
+        speaker_id = user_params.get('SYSTEM', 'speakerid')
+        microphone_id = user_params.get('SYSTEM', 'microphoneid')
 
-        # self.config()
+        self.recorder = Recorder(speaker_id, microphone_id)  # TODO put init speaker, mic in config
+        self.recorder.start()
 
         self.configure(background='gray92')
         self.protocol('WM_DELETE_WINDOW', self.disconnect)
@@ -56,9 +56,6 @@ class Player(Tk):
 
         self.shouter = Shouter(user_params, self.playlist)
         self.shouter.start()
-
-        self.recording_speaker = False
-        self.recording_microphone = False
 
         self.chunk_size = user_params.getint('ICECAST', 'ChunkSize')
         self.host = user_params.get('ICECAST', 'Host')
@@ -127,25 +124,6 @@ class Player(Tk):
         self.init_ui()
 
         self.update_player()
-
-    def config(self):
-        def destroy():
-            config_window.destroy()
-            # window.destroy()
-            # self.deiconify()
-
-        config_window = Tk()
-        config_window.configure(background='gray92')
-        config_window.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
-        config_window.title('Setup Pystation')
-        config_window.protocol('WM_DELETE_WINDOW', destroy)
-
-        finish_button = Button(config_window, text='Finish', command=destroy)
-
-        finish_button.place(x=self.width - 100 * self.scale, y=self.height - 75 * self.scale)
-
-        config_window.wait_window()
-        return None  # ? need?
 
     def init_ui(self):
         self.style.configure('TFrame', background='gray92')
@@ -216,10 +194,11 @@ class Player(Tk):
         self.playlist.skip_track()
 
     def record_speaker(self):
-        self.recording_speaker = not self.recording_speaker
+        self.playlist.toggle_recording_speaker()
 
-        if self.recording_speaker:
+        if self.playlist.is_recording_speaker():
             status = chr(10003)
+            self.playlist.record_speaker(self.recorder)
             # TODO disable other buttons
         else:
             status = chr(10005)
@@ -227,14 +206,14 @@ class Player(Tk):
 
         self.record_speaker_button['text'] = f'Speaker {status}'
 
-        self.playlist.record_speaker(self.recording_speaker, self.recorder)
-        self.recorder.set_recording_speaker(self.recording_speaker)
+        self.recorder.set_recording_speaker(self.playlist.is_recording_speaker())
 
     def record_microphone(self):
-        self.recording_microphone = not self.recording_microphone
+        self.playlist.toggle_recording_microphone()
 
-        if self.recording_microphone:
+        if self.playlist.is_recording_microphone():
             status = chr(10003)
+            self.playlist.record_microphone(self.recorder)
             # TODO disable other buttons? maybe not? test first
         else:
             status = chr(10005)
@@ -242,8 +221,7 @@ class Player(Tk):
 
         self.record_microphone_button['text'] = f'Microphone {status}'
 
-        self.playlist.record_microphone(self.recording_microphone, self.recorder)
-        self.recorder.set_recording_microphone(self.recording_microphone)
+        self.recorder.set_recording_microphone(self.playlist.is_recording_microphone())
 
     def youtube_download(self, url):
         if not url:
@@ -268,26 +246,29 @@ class Player(Tk):
 
         now_playing = self.playlist.get_current_track()  # Track object
 
-        if not self.playlist.get_paused() and now_playing:
+        if self.playlist.is_recording():
+            progress = self.playlist.get_current_track().get_volume()
+            now_playing_name = 'LIVE'
+
+            now_playing_time = 0
+            now_playing_length = 0
+
+        elif not self.playlist.get_paused() and now_playing:
             now_playing_name = repr(now_playing)
             now_playing_length = now_playing.get_length()
 
             progress = self.playlist.progress / now_playing.get_num_chunks()
             now_playing_time = progress * now_playing_length
 
-        else:  # idle or recording
-            if self.recording_speaker or self.recording_microphone:
-                progress = 1
-                now_playing_name = 'LIVE'
-            else:  # idle
-                progress = 0
-                now_playing_name = 'Idle'
+        else:  # idle
+            progress = 0
+            now_playing_name = 'Idle'
 
             now_playing_time = 0
             now_playing_length = 0
 
         # update progress bar and label
-        if not self.playlist.get_paused():
+        if not self.playlist.get_paused() or self.playlist.is_recording():
             self.progress_bar['value'] = progress * 1000
             self.progress_label.config(
                 text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
@@ -349,7 +330,6 @@ def run_player():
     # Config window
     outputs = ConfigWindow()
     outputs.mainloop()
-    print('done with config')
 
     # Main player
     root = Player()
