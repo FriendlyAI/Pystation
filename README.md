@@ -1,5 +1,12 @@
 # Pystation ![](docs/favicon/32.png)
 
+## Features
+
+- Built-in music player supporting multiple filetypes, including mp3, flac, webm, mp4, etc.
+- Player supports music queue, reordering/modifying queue, pause/play, and idle tracks.
+- Play youtube videos using links.
+- Support for streaming directly from speakers (with loopback) and microphone simultaneously.
+
 ## System Requirements
 
 Python 3.6

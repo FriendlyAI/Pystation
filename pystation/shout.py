@@ -6,32 +6,32 @@ import shouty
 
 class Shouter(Thread):
 
-    def __init__(self, user_params, playlist):
+    def __init__(self, user_params, playlist, chunk_size):
         super(Shouter, self).__init__(daemon=True)
 
         self.params = {
-            'host': user_params.get('ICECAST', 'Host'),
-            'port': user_params.getint('ICECAST', 'Port'),
-            'user': user_params.get('ICECAST', 'Username'),
-            'password': user_params.get('ICECAST', 'Password'),
+            'host': user_params.get('ICECAST', 'host'),
+            'port': user_params.getint('ICECAST', 'port'),
+            'user': user_params.get('ICECAST', 'username'),
+            'password': user_params.get('ICECAST', 'password'),
             'format': shouty.Format.MP3,
-            'mount': user_params.get('ICECAST', 'Mount'),
-            'name': user_params.get('ICECAST', 'Name'),
-            'description': user_params.get('ICECAST', 'Description'),
-            'genre': user_params.get('ICECAST', 'Genre'),
+            'mount': user_params.get('ICECAST', 'mount'),
+            'name': user_params.get('ICECAST', 'name'),
+            'description': user_params.get('ICECAST', 'description'),
+            'genre': user_params.get('ICECAST', 'genre'),
             'audio_info': {
                 'channels': '2',
                 'samplerate': '44100',
             }
         }
 
-        self.chunk_size = user_params.getint('ICECAST', 'ChunkSize')
+        self.chunk_size = chunk_size
 
         self.connected = False
 
         self.playlist = playlist
 
-        self.idle = open(user_params.get('GENERAL', 'IDLE'), 'rb')
+        self.idle = open(user_params.get('GENERAL', 'idle'), 'rb')
         # check if idle is correct format
 
     def connect(self):

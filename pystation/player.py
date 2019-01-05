@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 from os import environ
 from platform import system
-from tkinter import Tk, filedialog, StringVar, Message
+from tkinter import Tk, filedialog, StringVar, Message, messagebox
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style
 
 from config import ConfigWindow
@@ -18,8 +18,6 @@ class Player(Tk):
     def __init__(self):
         super(Player, self).__init__()
 
-        # Opened config window already
-
         # TODO add sections for organization
 
         user_params = ConfigParser()
@@ -31,35 +29,35 @@ class Player(Tk):
             self.call('wm', 'attributes', '.', '-topmost', '1')  # keep window on top
 
         self.scale = 1
-
         if system() == 'Linux':
             self.scale = 2
 
         self.width = 600 * self.scale
-        self.height = 475 * self.scale
+        self.height = 500 * self.scale
 
         self.x_center = self.winfo_screenwidth() / 2 - self.width / 2
         self.y_center = self.winfo_screenheight() / 2 - self.height / 2
-
-        speaker_id = user_params.get('SYSTEM', 'speakerid')
-        microphone_id = user_params.get('SYSTEM', 'microphoneid')
-
-        self.recorder = Recorder(speaker_id, microphone_id)  # TODO put init speaker, mic in config
-        self.recorder.start()
 
         self.configure(background='gray92')
         self.protocol('WM_DELETE_WINDOW', self.disconnect)
 
         self.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
 
-        self.playlist = Playlist(user_params.getint('ICECAST', 'ChunkSize'))
+        speaker_id = user_params.get('SYSTEM', 'speakerid')
+        microphone_id = user_params.get('SYSTEM', 'microphoneid')
 
-        self.shouter = Shouter(user_params, self.playlist)
+        self.recorder = Recorder(speaker_id, microphone_id)
+        self.recorder.start()
+
+        self.chunk_size = user_params.getint('ICECAST', 'chunksize')
+        self.host = user_params.get('ICECAST', 'host')
+        self.mount = user_params.get('ICECAST', 'mount')
+        self.name = user_params.get('ICECAST', 'name')
+
+        self.playlist = Playlist(self.chunk_size)
+
+        self.shouter = Shouter(user_params, self.playlist, self.chunk_size)
         self.shouter.start()
-
-        self.chunk_size = user_params.getint('ICECAST', 'ChunkSize')
-        self.host = user_params.get('ICECAST', 'Host')
-        self.mount = user_params.get('ICECAST', 'Mount')
 
         self.update_time = 100  # milleseconds
 
@@ -79,14 +77,16 @@ class Player(Tk):
 
         self.microphone_frame = Frame(self.recorder_frame)
 
-        # self.speaker_label = Label(self.speaker_frame, text='Speaker')
+        self.recording_symbol = chr(9679)
+        self.disconnected_symbol = chr(10005)
+        self.connected_symbol = chr(10003)
 
-        self.record_speaker_button = Button(self.speaker_frame, width=10, text=f'Speaker {chr(10005)}',
+        self.record_speaker_button = Button(self.speaker_frame, width=11,
+                                            text=f'Speaker {self.disconnected_symbol}',
                                             takefocus=False, command=self.record_speaker)
 
-        # self.microphone_label = Label(self.microphone_frame, text='Microphone')
-
-        self.record_microphone_button = Button(self.microphone_frame, width=10, text=f'Microphone {chr(10005)}',
+        self.record_microphone_button = Button(self.microphone_frame, width=11,
+                                               text=f'Microphone {self.disconnected_symbol}',
                                                takefocus=False, command=self.record_microphone)
 
         self.now_playing_label_text = StringVar()
@@ -197,12 +197,10 @@ class Player(Tk):
         self.playlist.toggle_recording_speaker()
 
         if self.playlist.is_recording_speaker():
-            status = chr(10003)
+            status = self.recording_symbol
             self.playlist.record_speaker(self.recorder)
-            # TODO disable other buttons
         else:
-            status = chr(10005)
-            # enable buttons
+            status = self.disconnected_symbol
 
         self.record_speaker_button['text'] = f'Speaker {status}'
 
@@ -212,12 +210,10 @@ class Player(Tk):
         self.playlist.toggle_recording_microphone()
 
         if self.playlist.is_recording_microphone():
-            status = chr(10003)
+            status = self.recording_symbol
             self.playlist.record_microphone(self.recorder)
-            # TODO disable other buttons? maybe not? test first
         else:
-            status = chr(10005)
-            # enable buttons
+            status = self.disconnected_symbol
 
         self.record_microphone_button['text'] = f'Microphone {status}'
 
@@ -240,9 +236,9 @@ class Player(Tk):
             else:
                 return '{:02d}:{:02d}'.format(minutes, seconds)
 
-        connection_status = chr(10003) if self.shouter.get_connected() else chr(10005)
+        connection_status = self.connected_symbol if self.shouter.get_connected() else self.disconnected_symbol
 
-        self.title(f'{connection_status} Pystation@{self.host}{self.mount}')
+        self.title(f'{connection_status} {self.name}@{self.host}{self.mount}')
 
         now_playing = self.playlist.get_current_track()  # Track object
 
@@ -322,8 +318,12 @@ class Player(Tk):
             self.playlist_tree.yview_moveto((selected[-1] + 1) / tree_length)
 
     def disconnect(self):
-        self.recorder.join()
-        self.destroy()
+        self.withdraw()
+        if messagebox.askyesno('Disconnect', 'Disconnect and close?'):
+            self.recorder.join()
+            self.destroy()
+        else:
+            self.deiconify()
 
 
 def run_player():

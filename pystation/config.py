@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 from os import environ
 from platform import system
+from sys import exit
 from tkinter import Tk, filedialog, StringVar, Message, IntVar
 from tkinter.ttk import Button, Entry, Label, Frame, Combobox, Checkbutton
 
@@ -23,7 +24,7 @@ class ConfigWindow(Tk):
 
         self.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
         self.title('Setup Pystation')
-        self.protocol('WM_DELETE_WINDOW', self.finish)
+        self.protocol('WM_DELETE_WINDOW', self.cancel)
         self.configure(background='gray92')
 
         self.user_params = ConfigParser()
@@ -38,7 +39,7 @@ class ConfigWindow(Tk):
         default_name = self.user_params.get('ICECAST', 'name', fallback='')
         default_description = self.user_params.get('ICECAST', 'description', fallback='')
         default_genre = self.user_params.get('ICECAST', 'genre', fallback='')
-        default_idle = self.user_params.get('GENERAL', 'Idle', fallback='')
+        default_idle = self.user_params.get('GENERAL', 'idle', fallback='')
         default_speaker = self.user_params.get('SYSTEM', 'speakername', fallback='')
         default_microphone = self.user_params.get('SYSTEM', 'microphonename', fallback='')
         default_top = self.user_params.get('SYSTEM', 'toplevel', fallback='0')
@@ -101,8 +102,7 @@ class ConfigWindow(Tk):
 
         self.speaker_label = Label(self.lower_frame, text='Speaker')
 
-        speakers = [f'{repr(speaker)} ID: {speaker.id}'
-                    for speaker in all_microphones(include_loopback=True)]
+        speakers = [f'{repr(speaker)} ID: {speaker.id}' for speaker in all_microphones(include_loopback=True)]
 
         self.speaker_text = StringVar()
         self.speaker_text.set(default_speaker)
@@ -220,4 +220,9 @@ class ConfigWindow(Tk):
 
         with open('config/conf.ini', 'w+') as config_file:
             self.user_params.write(config_file)
+
         self.destroy()
+
+    def cancel(self):
+        self.destroy()
+        exit()
