@@ -60,6 +60,8 @@ class Recorder(Thread):
     @thread
     def record_speaker_frames(self):
         with self.speaker.recorder(44100, channels=[0, 1]) as speaker_recorder:
+            speaker_recorder.record(1)  # initialize recorder to reduce latency
+            self.recording_speaker = True
             while not self.killed.is_set() and self.recording_speaker:
                 numpy_frames = speaker_recorder.record(self.num_frames)
                 self.speaker_queue.put(numpy_frames)
@@ -69,6 +71,8 @@ class Recorder(Thread):
     @thread
     def record_microphone_frames(self):
         with self.microphone.recorder(44100, channels=[0, 1]) as microphone_recorder:
+            microphone_recorder.record(1)  # initialize recorder to reduce latency
+            self.recording_microphone = True
             while not self.killed.is_set() and self.recording_microphone:
                 numpy_frames = microphone_recorder.record(self.num_frames)
                 self.microphone_queue.put(numpy_frames)
@@ -77,11 +81,6 @@ class Recorder(Thread):
 
     def add_chunk(self):
         if self.recording_speaker and self.recording_microphone:
-            # reduce latency between streams
-            while self.microphone_queue.qsize() > 1:
-                self.microphone_queue.get()
-            while self.speaker_queue.qsize() > 1:
-                self.speaker_queue.get()
 
             microphone_chunk = self.microphone_queue.get()
             speaker_chunk = self.speaker_queue.get()
@@ -113,14 +112,16 @@ class Recorder(Thread):
         self.track = track
 
     def set_recording_speaker(self, recording_bool):
-        self.recording_speaker = recording_bool
-        if self.recording_speaker:
+        if recording_bool:
             self.record_speaker_frames()
+        else:
+            self.recording_speaker = False
 
     def set_recording_microphone(self, recording_bool):
-        self.recording_microphone = recording_bool
-        if self.recording_microphone:
+        if recording_bool:
             self.record_microphone_frames()
+        else:
+            self.recording_microphone = False
 
     def get_volume(self):
         return self.volume
