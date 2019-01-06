@@ -63,6 +63,7 @@ class Recorder(Thread):
             while not self.killed.is_set() and self.recording_speaker:
                 numpy_frames = speaker_recorder.record(self.num_frames)
                 self.speaker_queue.put(numpy_frames)
+
         self.speaker_queue = Queue()  # clear queue
 
     @thread
@@ -71,10 +72,17 @@ class Recorder(Thread):
             while not self.killed.is_set() and self.recording_microphone:
                 numpy_frames = microphone_recorder.record(self.num_frames)
                 self.microphone_queue.put(numpy_frames)
+
         self.microphone_queue = Queue()  # clear queue
 
     def add_chunk(self):
         if self.recording_speaker and self.recording_microphone:
+            # reduce latency between streams
+            while self.microphone_queue.qsize() > 1:
+                self.microphone_queue.get()
+            while self.speaker_queue.qsize() > 1:
+                self.speaker_queue.get()
+
             microphone_chunk = self.microphone_queue.get()
             speaker_chunk = self.speaker_queue.get()
             int16_frames = (average([microphone_chunk, speaker_chunk], axis=0, weights=[5, 1])

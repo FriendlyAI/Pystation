@@ -40,7 +40,7 @@
             if (stream.paused) {
                 stream.load();
                 stream.play();
-            button.value = "Pause";
+                button.value = "Pause";
             }
 
             else {
@@ -50,11 +50,12 @@
         }
     </script>
 
-    <script>
-        function playing_check() {
-            var stream = document.getElementById("stream");
-            var button = document.getElementById("play_button");
 
+    <script>
+        var stream = document.getElementById("stream");
+        var button = document.getElementById("play_button");
+
+        function playing_check() {
             setInterval(check_status, 1000);
 
             function check_status() {
