@@ -7,6 +7,7 @@ import soundcard
 from numpy import int16, average, amax, amin
 
 from thread_decorator import thread
+from track import Track
 
 
 class Recorder(Thread):
@@ -30,7 +31,7 @@ class Recorder(Thread):
 
         self.speaker_queue = Queue()
         self.microphone_queue = Queue()
-        self.track = None
+        self.track = Track(0)
 
         self.volume = 1.0
 
@@ -107,9 +108,12 @@ class Recorder(Thread):
 
             chunk = bytes(self.encoder.encode(int16_frames))
             self.track.add_chunk(chunk)
+    #
+    # def set_track(self, track):
+    #     self.track = track
 
-    def set_track(self, track):
-        self.track = track
+    def get_track(self):
+        return self.track
 
     def set_recording_speaker(self, recording_bool):
         if recording_bool:

@@ -9,15 +9,12 @@ class Track:
     def __init__(self, chunk_size, filename=None, url=None):
         if filename and isfile(filename):
             self.trackname, self.filename, self.length = validate(filename)
+            self.file_reader = open(self.filename, 'rb')
         elif url:
             self.trackname, self.filename, self.length = youtube_download(url)
         else:
             self.filename = None
-
-        if self.filename:
-            self.file_reader = open(self.filename, 'rb')
-        else:
-            self.trackname = 'Microphone/Speaker'
+            self.trackname = 'LIVE'
 
         self.chunk_size = chunk_size
 
@@ -27,20 +24,15 @@ class Track:
 
         self.num_chunks = 0
 
-        # TODO override track name manually
-
     def read_file(self):
-        chunk = self.read_chunk(self.chunk_size)
+        chunk = self.file_reader.read(self.chunk_size)
         while chunk:
             self.chunk_queue.put(chunk)
-            chunk = self.read_chunk(self.chunk_size)
+            chunk = self.file_reader.read(self.chunk_size)
             self.num_chunks += 1
 
         self.delete_file()
         self.read = True
-
-    def read_chunk(self, chunk_size):
-        return self.file_reader.read(chunk_size)
 
     def delete_file(self):
         try:
@@ -54,9 +46,6 @@ class Track:
         Used only for speaker/microphone
         """
         self.chunk_queue.put(chunk)
-
-    def get_trackname(self):
-        return self.trackname
 
     def get_filename(self):
         return self.filename
@@ -76,7 +65,10 @@ class Track:
     def get_read(self):
         return self.read
 
-    def __repr__(self):
+    def set_trackname(self, name):
+        self.trackname = name
+
+    def get_trackname(self):
         if self.trackname:
             return self.trackname
         else:

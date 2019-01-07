@@ -1,7 +1,9 @@
 from configparser import ConfigParser
 from os import environ
 from platform import system
-from tkinter import Tk, filedialog, StringVar, Message, messagebox
+from tkinter import Tk, filedialog, StringVar, Message
+from tkinter.messagebox import askyesno
+from tkinter.simpledialog import askstring
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style, Scale
 
 from config import ConfigWindow
@@ -24,9 +26,9 @@ class Player(Tk):
         user_params.read('config/conf.ini')
 
         # Window initialization
-
-        if int(user_params.get('SYSTEM', 'toplevel')):
-            self.call('wm', 'attributes', '.', '-topmost', '1')  # keep window on top
+        self.toplevel = int(user_params.get('SYSTEM', 'toplevel'))
+        if self.toplevel:
+            self.attributes("-topmost", True)  # keep window on top
 
         self.scale = 1
         if system() == 'Linux':
@@ -55,6 +57,7 @@ class Player(Tk):
         self.name = user_params.get('ICECAST', 'name')
 
         self.playlist = Playlist(self.chunk_size)
+        self.playlist.set_live_track(self.recorder.get_track())
 
         self.shouter = Shouter(user_params, self.playlist, self.chunk_size)
         self.shouter.start()
@@ -95,7 +98,7 @@ class Player(Tk):
 
         self.now_playing_label = Message(self, width=500 * self.scale, justify='center', background='gray92',
                                          textvariable=self.now_playing_label_text)
-        # TODO change to multiline tkinter.text
+        self.now_playing_label.bind('<Button-1>', lambda _: self.set_now_playing_label())
 
         self.progress_bar = Progressbar(self, orient='horizontal', length=300 * self.scale, mode='determinate',
                                         maximum=1000)
@@ -202,7 +205,7 @@ class Player(Tk):
 
         if self.playlist.is_recording_speaker():
             status = self.recording_symbol
-            self.playlist.record_speaker(self.recorder)
+            # self.playlist.record_speaker(self.recorder)
         else:
             status = self.disconnected_symbol
 
@@ -215,7 +218,7 @@ class Player(Tk):
 
         if self.playlist.is_recording_microphone():
             status = self.recording_symbol
-            self.playlist.record_microphone(self.recorder)
+            # self.playlist.record_microphone(self.recorder)
         else:
             status = self.disconnected_symbol
 
@@ -225,6 +228,16 @@ class Player(Tk):
 
     def set_volume(self, volume):
         self.recorder.set_amplification(float(volume))
+
+    def set_now_playing_label(self):
+        self.attributes("-topmost", False)
+        new_trackname = askstring('Override Trackname', 'Enter new trackname', parent=self)
+        if self.toplevel:
+            self.attributes("-topmost", True)
+
+        current_track = self.playlist.get_current_track()
+        if new_trackname and current_track:
+            current_track.set_trackname(new_trackname)
 
     def youtube_download(self, url):
         if not url:
@@ -247,37 +260,37 @@ class Player(Tk):
 
         self.title(f'{connection_status} {self.name}@{self.host}{self.mount}')
 
-        now_playing = self.playlist.get_current_track()  # Track object
+        current_track = self.playlist.get_current_track()  # Track object
 
         if self.playlist.is_recording():
             progress = self.recorder.get_volume()
-            now_playing_name = 'LIVE'
+            current_track_name = current_track.get_trackname()
 
-            now_playing_time = 0
-            now_playing_length = 0
+            current_track_time = 0
+            current_track_length = 0
 
-        elif not self.playlist.get_paused() and now_playing:
-            now_playing_name = repr(now_playing)
-            now_playing_length = now_playing.get_length()
+        elif not self.playlist.get_paused() and current_track:
+            current_track_name = current_track.get_trackname()
+            current_track_length = current_track.get_length()
 
-            progress = self.playlist.progress / now_playing.get_num_chunks()
-            now_playing_time = progress * now_playing_length
+            progress = self.playlist.progress / current_track.get_num_chunks()
+            current_track_time = progress * current_track_length
 
         else:  # idle
             progress = 0
-            now_playing_name = 'Idle'
+            current_track_name = 'Idle'
 
-            now_playing_time = 0
-            now_playing_length = 0
+            current_track_time = 0
+            current_track_length = 0
 
         # update progress bar and label
         if not self.playlist.get_paused() or self.playlist.is_recording():
             self.progress_bar['value'] = progress * 1000
             self.progress_label.config(
-                text=f'{seconds_to_time(now_playing_time)}/{seconds_to_time(now_playing_length)}')
+                text=f'{seconds_to_time(current_track_time)}/{seconds_to_time(current_track_length)}')
 
         # update now playing name
-        self.now_playing_label_text.set(now_playing_name)
+        self.now_playing_label_text.set(current_track_name)
 
         if not self.playlist.get_updated():
             # update playlist tree
@@ -325,12 +338,13 @@ class Player(Tk):
             self.playlist_tree.yview_moveto((selected[-1] + 1) / tree_length)
 
     def disconnect(self):
-        self.withdraw()
-        if messagebox.askyesno('Disconnect', 'Disconnect and close?'):
+        # self.withdraw()
+        self.attributes("-topmost", False)
+        if askyesno('Disconnect', 'Disconnect and close?'):
             self.recorder.join()
             self.destroy()
-        else:
-            self.deiconify()
+        elif self.toplevel:
+            self.attributes("-topmost", True)
 
 
 def run_player():
