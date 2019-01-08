@@ -141,14 +141,6 @@ class Playlist:
             print('queueing', track_slot)
             track_slot.read_file()
 
-    # def record_speaker(self, recorder):
-    #     self.live_track = recorder.get_track()
-    #     # recorder.set_track(self.live_track)
-    #
-    # def record_microphone(self, recorder):
-    #     self.live_track = recorder.get_track()
-    #     # recorder.set_track(self.live_track)
-
     def set_live_track(self, track):
         self.live_track = track
 

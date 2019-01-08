@@ -1,4 +1,4 @@
-# Pystation ![](docs/favicon/32.png)
+# Pystation ![](https://raw.githubusercontent.com/FriendlyAI/Pystation-Stream/master/favicon/32.png)
 
 ## Features
 

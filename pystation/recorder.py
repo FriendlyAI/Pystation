@@ -82,7 +82,6 @@ class Recorder(Thread):
 
     def add_chunk(self):
         if self.recording_speaker and self.recording_microphone:
-
             microphone_chunk = self.microphone_queue.get()
             speaker_chunk = self.speaker_queue.get()
             int16_frames = (average([microphone_chunk, speaker_chunk], axis=0, weights=[5, 1])
@@ -108,9 +107,6 @@ class Recorder(Thread):
 
             chunk = bytes(self.encoder.encode(int16_frames))
             self.track.add_chunk(chunk)
-    #
-    # def set_track(self, track):
-    #     self.track = track
 
     def get_track(self):
         return self.track

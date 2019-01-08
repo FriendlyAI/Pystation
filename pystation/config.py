@@ -72,10 +72,6 @@ class ConfigWindow(Tk):
         self.mount_input = Entry(self.upper_frame, width=40, font='Menlo')
         self.mount_input.insert(0, default_mount)
 
-        self.chunksize_label = Label(self.upper_frame, text='Chunk size')
-        self.chunksize_input = Entry(self.upper_frame, width=5, font='Menlo')
-        self.chunksize_input.insert(0, default_chunksize)
-
         self.name_label = Label(self.upper_frame, text='Stream name')
         self.name_input = Entry(self.upper_frame, width=40, font='Menlo')
         self.name_input.insert(0, default_name)
@@ -87,6 +83,10 @@ class ConfigWindow(Tk):
         self.genre_label = Label(self.upper_frame, text='Genre')
         self.genre_input = Entry(self.upper_frame, width=40, font='Menlo')
         self.genre_input.insert(0, default_genre)
+
+        self.chunksize_label = Label(self.upper_frame, text='Chunk size')
+        self.chunksize_input = Entry(self.upper_frame, width=5, font='Menlo')
+        self.chunksize_input.insert(0, default_chunksize)
 
         self.mid_frame = Frame(self)
 
@@ -149,17 +149,17 @@ class ConfigWindow(Tk):
         self.mount_label.grid(row=4, column=0, sticky='w', padx=10 * self.scale)
         self.mount_input.grid(row=4, column=1, sticky='w')
 
-        self.chunksize_label.grid(row=5, column=0, sticky='w', padx=10 * self.scale)
-        self.chunksize_input.grid(row=5, column=1, sticky='w')
+        self.name_label.grid(row=5, column=0, sticky='w', padx=10 * self.scale)
+        self.name_input.grid(row=5, column=1, sticky='w')
 
-        self.name_label.grid(row=6, column=0, sticky='w', padx=10 * self.scale)
-        self.name_input.grid(row=6, column=1, sticky='w')
+        self.description_label.grid(row=6, column=0, sticky='w', padx=10 * self.scale)
+        self.description_input.grid(row=6, column=1, sticky='w')
 
-        self.description_label.grid(row=7, column=0, sticky='w', padx=10 * self.scale)
-        self.description_input.grid(row=7, column=1, sticky='w')
+        self.genre_label.grid(row=7, column=0, sticky='w', padx=10 * self.scale)
+        self.genre_input.grid(row=7, column=1, sticky='w')
 
-        self.genre_label.grid(row=8, column=0, sticky='w', padx=10 * self.scale)
-        self.genre_input.grid(row=8, column=1, sticky='w')
+        self.chunksize_label.grid(row=8, column=0, sticky='w', padx=10 * self.scale)
+        self.chunksize_input.grid(row=8, column=1, sticky='w')
 
         self.mid_frame.pack()
 
@@ -209,10 +209,10 @@ class ConfigWindow(Tk):
         self.user_params['ICECAST']['username'] = self.username_input.get()
         self.user_params['ICECAST']['password'] = self.password_input.get()
         self.user_params['ICECAST']['mount'] = self.mount_input.get()
-        self.user_params['ICECAST']['chunksize'] = self.chunksize_input.get()
         self.user_params['ICECAST']['name'] = self.name_input.get()
         self.user_params['ICECAST']['description'] = self.description_input.get()
         self.user_params['ICECAST']['genre'] = self.genre_input.get()
+        self.user_params['ICECAST']['chunksize'] = self.chunksize_input.get()
         self.user_params['SYSTEM']['scale'] = str(self.scale)
         self.user_params['SYSTEM']['xcenter'] = str(self.x_center)
         self.user_params['SYSTEM']['ycenter'] = str(self.y_center)

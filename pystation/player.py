@@ -349,8 +349,8 @@ class Player(Tk):
 
 def run_player():
     # Config window
-    outputs = ConfigWindow()
-    outputs.mainloop()
+    config_window = ConfigWindow()
+    config_window.mainloop()
 
     # Main player
     root = Player()
