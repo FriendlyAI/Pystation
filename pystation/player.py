@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os import environ
+from os import environ, path
 from platform import system
 from tkinter import Tk, filedialog, StringVar, Message
 from tkinter.messagebox import askyesno
@@ -23,7 +23,7 @@ class Player(Tk):
         # TODO add sections for organization
 
         user_params = ConfigParser()
-        user_params.read('config/conf.ini')
+        user_params.read(path.join('config', 'conf.ini'))
 
         # Window initialization
         self.toplevel = int(user_params.get('SYSTEM', 'toplevel'))
@@ -184,9 +184,12 @@ class Player(Tk):
 
     @thread
     def choose_upload(self):
-        filenames = filedialog.askopenfilenames(initialdir=f'{environ["HOME"]}/Downloads',
+        self.attributes("-topmost", False)
+        filenames = filedialog.askopenfilenames(initialdir=f'{path.join(environ["HOME"], "Downloads")}',
                                                 title='Select File',
                                                 filetypes=[('Audio', FILEDIALOG_TYPES)])
+        if self.toplevel:
+            self.attributes("-topmost", True)
         [self.playlist.add_track(filename) for filename in filenames]
 
     def toggle_pause(self):
@@ -205,7 +208,6 @@ class Player(Tk):
 
         if self.playlist.is_recording_speaker():
             status = self.recording_symbol
-            # self.playlist.record_speaker(self.recorder)
         else:
             status = self.disconnected_symbol
 
@@ -218,7 +220,6 @@ class Player(Tk):
 
         if self.playlist.is_recording_microphone():
             status = self.recording_symbol
-            # self.playlist.record_microphone(self.recorder)
         else:
             status = self.disconnected_symbol
 
@@ -296,7 +297,7 @@ class Player(Tk):
             # update playlist tree
             self.playlist_tree.delete(*self.playlist_tree.get_children())
             for index, track in enumerate(self.playlist.get_tracks()):
-                self.playlist_tree.insert('', 'end', iid=index, text=repr(track),
+                self.playlist_tree.insert('', 'end', iid=index, text=track.get_trackname(),
                                           values=seconds_to_time(track.get_length()))
             if self.focused_items:
                 for index in self.focused_items:
@@ -338,7 +339,6 @@ class Player(Tk):
             self.playlist_tree.yview_moveto((selected[-1] + 1) / tree_length)
 
     def disconnect(self):
-        # self.withdraw()
         self.attributes("-topmost", False)
         if askyesno('Disconnect', 'Disconnect and close?'):
             self.recorder.join()

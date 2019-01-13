@@ -1,4 +1,4 @@
-from os import remove
+from os import remove, sep
 from os.path import isfile
 from queue import Queue
 
@@ -72,4 +72,7 @@ class Track:
         if self.trackname:
             return self.trackname
         else:
-            return self.filename[self.filename.rindex('/') + 1:self.filename.rindex(' temp')]
+            return self.filename[self.filename.rindex(sep) + 1:self.filename.rindex(' temp')]
+
+    def __repr__(self):
+        return self.get_trackname()

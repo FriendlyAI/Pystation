@@ -1,8 +1,7 @@
-from os import getcwd, remove, rename
+from os import getcwd, remove, rename, sep, path
 from shutil import copyfile
 
-from ffmpy import FFRuntimeError
-from ffmpy import FFmpeg
+from ffmpy import FFmpeg, FFRuntimeError
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4
@@ -15,7 +14,7 @@ ydl_opts = {
         'preferredcodec': 'mp3',
         'preferredquality': '192',
     }],
-    'outtmpl': 'temp/%(title)s.%(ext)s'
+    'outtmpl': f'temp{sep}%(title)s.%(ext)s'
 }
 
 YDL = YoutubeDL(ydl_opts)
@@ -44,7 +43,7 @@ def reformat_mp3(filename, temp_filename):
 
 def get_tags(filename, temp=False):
     extension = filename[filename.rindex('.'):]
-    temp_filename = f'{getcwd()}/temp{filename[filename.rindex("/"):filename.rindex(".")]} temp.mp3'
+    temp_filename = path.join(getcwd(), 'temp', f'{filename[filename.rindex(sep) + 1:filename.rindex(".")]} temp.mp3')
 
     if extension == '.mp3':
         id3 = MP3(filename)
@@ -114,6 +113,6 @@ def youtube_download(url):
         CACHE.add(url)
         info = YDL.extract_info(url, download=True)
         filename = YDL.prepare_filename(info)
-        filepath = f'{getcwd()}/{filename[:filename.rindex(".")]}.mp3'
+        filepath = path.join(getcwd(), filename[:filename.rindex(".")] + '.mp3')
 
         return validate(filepath, temp=True, cache_url=url)

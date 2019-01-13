@@ -1,10 +1,10 @@
-import lameenc
+from lameenc import Encoder
 from queue import Queue
 from threading import Thread, Event
 from time import sleep
 
-import soundcard
 from numpy import int16, average, amax, amin
+from soundcard import get_microphone
 
 from thread_decorator import thread
 from track import Track
@@ -18,7 +18,7 @@ class Recorder(Thread):
         self.speaker = None
         self.microphone = None
 
-        self.encoder = lameenc.Encoder()
+        self.encoder = Encoder()
         self.encoder.set_bit_rate(192)
         self.encoder.set_channels(2)
         self.encoder.set_quality(2)  # highest quality
@@ -45,14 +45,14 @@ class Recorder(Thread):
 
     def init_speaker(self, speaker_id):
         # TODO check is speaker.channels >= 2, maybe simulate stereo with mono
-        self.speaker = soundcard.get_microphone(int(speaker_id), include_loopback=True)
+        self.speaker = get_microphone(int(speaker_id), include_loopback=True)
 
         if self.microphone and self.microphone.id == self.speaker.id:
             self.speaker = None
             print('duplicate microphone and speaker')
 
     def init_microphone(self, microphone_id):
-        self.microphone = soundcard.get_microphone(int(microphone_id), include_loopback=False)
+        self.microphone = get_microphone(int(microphone_id), include_loopback=False)
 
         if self.speaker and self.microphone.id == self.speaker.id:
             self.microphone = None

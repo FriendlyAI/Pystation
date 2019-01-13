@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os import environ
+from os import environ, path
 from platform import system
 from sys import exit
 from tkinter import Tk, filedialog, StringVar, Message, IntVar
@@ -28,7 +28,7 @@ class ConfigWindow(Tk):
         self.configure(background='gray92')
 
         self.user_params = ConfigParser()
-        self.user_params.read('config/conf.ini')
+        self.user_params.read(path.join('config', 'conf.ini'))
 
         default_host = self.user_params.get('ICECAST', 'host', fallback='')
         default_port = self.user_params.get('ICECAST', 'port', fallback='')
@@ -65,7 +65,7 @@ class ConfigWindow(Tk):
         self.username_input.insert(0, default_username)
 
         self.password_label = Label(self.upper_frame, text='Password')
-        self.password_input = Entry(self.upper_frame, width=40, font='Menlo', show='*')
+        self.password_input = Entry(self.upper_frame, width=40, font='Menlo', show=chr(9679))
         self.password_input.insert(0, default_password)
 
         self.mount_label = Label(self.upper_frame, text='Mount')
@@ -180,7 +180,8 @@ class ConfigWindow(Tk):
         self.finish_button.pack()
 
     def select_idle_file(self):
-        filename = filedialog.askopenfilename(initialdir=f'{environ["HOME"]}/Downloads', title='Select File',
+        filename = filedialog.askopenfilename(initialdir=f'{path.join(environ["HOME"], "Downloads")}',
+                                              title='Select File',
                                               filetypes=[('Audio', '*.mp3')])
         if filename:
             self.user_params['GENERAL']['idle'] = filename
@@ -218,7 +219,7 @@ class ConfigWindow(Tk):
         self.user_params['SYSTEM']['ycenter'] = str(self.y_center)
         self.user_params['SYSTEM']['toplevel'] = str(self.top_window_status.get())
 
-        with open('config/conf.ini', 'w+') as config_file:
+        with open(path.join('config', 'conf.ini'), 'w+') as config_file:
             self.user_params.write(config_file)
 
         self.destroy()
