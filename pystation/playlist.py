@@ -14,7 +14,8 @@ class Playlist:
 
         self.chunk_size = chunk_size
         self.paused = False
-        self.updated = True  # false tells GUI that tracklist needs updating
+        self.trackname_updated = True  # true tells GUI that trackname needs updating
+        self.playlist_updated = False  # true tells GUI that tracklist needs updating
 
         self.recording_speaker = False
         self.recording_microphone = False
@@ -27,7 +28,7 @@ class Playlist:
         self.tracklist.append(track)
         print(f'tracklist: {self.tracklist}\nadded {filename}')
         self.enqueue()
-        self.updated = False
+        self.playlist_updated = True
 
     @thread
     def add_youtube_track(self, url):
@@ -41,13 +42,13 @@ class Playlist:
         else:
             self.tracklist.append(track)
             self.enqueue()
-            self.updated = False
+            self.playlist_updated = True
         finally:
             self.loading_tracklist.remove(url)
 
     def remove_track(self, index):
         if len(self.tracklist) > 0:
-            self.updated = False
+            self.playlist_updated = True
             track = self.tracklist.pop(index)
             if index == 0:
                 self.load_next_track(False)
@@ -65,14 +66,14 @@ class Playlist:
             self.tracklist.insert(index - 1, self.tracklist.pop(index))
 
         self.load_next_track(False)
-        self.updated = False
+        self.playlist_updated = True
 
     def move_tracks_down(self, track_indices):
         for index in track_indices:
             self.tracklist.insert(index + 1, self.tracklist.pop(index))
 
         self.load_next_track(False)
-        self.updated = False
+        self.playlist_updated = True
 
     def get_next_track(self):
         if len(self.tracklist) > 0:
@@ -109,12 +110,15 @@ class Playlist:
             if self.next_track:
                 self.current_track = self.next_track
                 self.remove_track(0)
+                self.trackname_updated = True
                 return True
             else:
                 if len(self.tracklist) > 0:
                     self.load_next_track(True)
-                else:
+                    self.trackname_updated = True
+                elif self.current_track:
                     self.current_track = None
+                    self.trackname_updated = True
                 return False
 
         elif not self.next_track and len(self.tracklist) > 0:
@@ -149,12 +153,14 @@ class Playlist:
 
     def toggle_recording_speaker(self):
         self.recording_speaker = not self.recording_speaker
+        self.trackname_updated = True
 
     def is_recording_microphone(self):
         return self.recording_microphone
 
     def toggle_recording_microphone(self):
         self.recording_microphone = not self.recording_microphone
+        self.trackname_updated = True
 
     def is_recording(self):
         return self.recording_speaker or self.recording_microphone
@@ -177,8 +183,14 @@ class Playlist:
     def increment_progress(self):
         self.progress += 1
 
-    def update(self):
-        self.updated = True
+    def update_trackname(self):
+        self.trackname_updated = False
 
-    def get_updated(self):
-        return self.updated
+    def get_trackname_updated(self):
+        return self.trackname_updated
+
+    def update_playlist(self):
+        self.playlist_updated = False
+
+    def get_playlist_updated(self):
+        return self.playlist_updated

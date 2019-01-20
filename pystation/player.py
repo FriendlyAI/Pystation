@@ -238,7 +238,15 @@ class Player(Tk):
 
         current_track = self.playlist.get_current_track()
         if new_trackname and current_track:
+            new_trackname = new_trackname.strip()
             current_track.set_trackname(new_trackname)
+            self.update_trackname()
+
+    def update_trackname(self):
+        track = self.playlist.get_current_track()
+        trackname = track.get_trackname() if track else 'IDLE'
+        self.now_playing_label_text.set(trackname)
+        self.shouter.update_metadata(trackname)
 
     def youtube_download(self, url):
         if not url:
@@ -265,25 +273,21 @@ class Player(Tk):
 
         if self.playlist.is_recording():
             progress = self.recorder.get_volume()
-            current_track_name = current_track.get_trackname()
-
             current_track_time = 0
             current_track_length = 0
 
         elif not self.playlist.get_paused() and current_track:
-            current_track_name = current_track.get_trackname()
             current_track_length = current_track.get_length()
 
             try:
                 progress = self.playlist.progress / current_track.get_num_chunks()
             except ZeroDivisionError:
                 progress = 0
+
             current_track_time = progress * current_track_length
 
         else:  # idle
             progress = 0
-            current_track_name = 'Idle'
-
             current_track_time = 0
             current_track_length = 0
 
@@ -293,10 +297,12 @@ class Player(Tk):
             self.progress_label.config(
                 text=f'{seconds_to_time(current_track_time)}/{seconds_to_time(current_track_length)}')
 
-        # update now playing name
-        self.now_playing_label_text.set(current_track_name)
+        if self.playlist.get_trackname_updated():
+            # update now playing name
+            self.update_trackname()
+            self.playlist.update_trackname()
 
-        if not self.playlist.get_updated():
+        if self.playlist.get_playlist_updated():
             # update playlist tree
             self.playlist_tree.delete(*self.playlist_tree.get_children())
             for index, track in enumerate(self.playlist.get_tracks()):
@@ -307,7 +313,7 @@ class Player(Tk):
                     self.playlist_tree.selection_add(index)
                 self.focused_items = ()
 
-            self.playlist.update()
+            self.playlist.update_playlist()
 
         self.after(self.update_time, self.update_player)
 

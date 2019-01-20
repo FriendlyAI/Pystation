@@ -58,6 +58,7 @@ class Shouter(Thread):
         try:
             self.connection.open()
             self.connected = True
+            self.update_metadata('IDLE')
             while True:
                 self.send_chunk()
         except Exception as e:
@@ -68,8 +69,6 @@ class Shouter(Thread):
 
     def send_chunk(self):
         current_queue = self.playlist.current_chunk_queue()
-        current_track = self.playlist.get_current_track()
-        trackname = current_track.get_trackname() if current_track else 'IDLE'
 
         if self.playlist.is_recording():
             if current_queue.empty():
@@ -85,10 +84,11 @@ class Shouter(Thread):
                 chunk = current_queue.get()
                 self.playlist.increment_progress()
 
-        self.connection.set_metadata({'song': trackname})
-
         self.connection.send(chunk)
         self.connection.sync()
+
+    def update_metadata(self, trackname):
+        self.connection.set_metadata({'song': trackname})
 
     def get_idle_chunk(self):
         chunk = self.idle.read(self.chunk_size)
