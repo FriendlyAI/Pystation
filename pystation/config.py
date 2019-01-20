@@ -105,6 +105,8 @@ class ConfigWindow(Tk):
         speakers = [f'{repr(speaker)} ID: {speaker.id}' for speaker in all_microphones(include_loopback=True)]
 
         self.speaker_text = StringVar()
+        if default_speaker in speakers:
+            self.speaker_text.set(default_speaker)
         self.speaker_text.set(default_speaker)
         self.speaker_choice = Combobox(self.lower_frame, width=40, values=speakers,
                                        textvariable=self.speaker_text, state='readonly', takefocus=False)
@@ -116,7 +118,8 @@ class ConfigWindow(Tk):
                        for microphone in all_microphones(include_loopback=False)]
 
         self.microphone_text = StringVar()
-        self.microphone_text.set(default_microphone)
+        if default_microphone in microphones:
+            self.microphone_text.set(default_microphone)
         self.microphone_choice = Combobox(self.lower_frame, width=40, values=microphones,
                                           textvariable=self.microphone_text, state='readonly', takefocus=False)
         self.microphone_choice.bind('<<ComboboxSelected>>', lambda _: self.select_microphone())

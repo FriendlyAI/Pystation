@@ -81,7 +81,7 @@ class Playlist:
 
     def current_chunk_queue(self):
         if self.is_recording():
-            return self.current_track.get_chunk_queue()
+            return self.live_track.get_chunk_queue()
 
         if not self.is_recording() and (not self.current_track or self.current_track.get_chunk_queue().empty()):
             # track ended, enqueue next

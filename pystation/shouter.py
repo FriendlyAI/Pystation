@@ -1,7 +1,7 @@
 from threading import Thread
 from time import sleep
 
-import shouty
+from shout import Shout
 
 
 class Shouter(Thread):
@@ -14,16 +14,17 @@ class Shouter(Thread):
             'port': user_params.getint('ICECAST', 'port'),
             'user': user_params.get('ICECAST', 'username'),
             'password': user_params.get('ICECAST', 'password'),
-            'format': shouty.Format.MP3,
             'mount': user_params.get('ICECAST', 'mount'),
             'name': user_params.get('ICECAST', 'name'),
             'description': user_params.get('ICECAST', 'description'),
             'genre': user_params.get('ICECAST', 'genre'),
             'audio_info': {
                 'channels': '2',
-                'samplerate': '44100',
+                'samplerate': '44100'
             }
         }
+        self.connection = Shout()
+        self.init_connection()
 
         self.chunk_size = chunk_size
 
@@ -32,30 +33,51 @@ class Shouter(Thread):
         self.playlist = playlist
 
         self.idle = open(user_params.get('GENERAL', 'idle'), 'rb')
-        # check if idle is correct format
+
+        self.trackname = ''
+
+    def init_connection(self):
+        host = self.params.get('host')
+        mount = self.params.get('mount')
+
+        self.connection.host = host
+        self.connection.port = self.params.get('port')
+        self.connection.user = self.params.get('username')
+        self.connection.password = self.params.get('password')
+        self.connection.format = 'mp3'
+        self.connection.mount = mount
+        self.connection.protocol = 'http'
+        self.connection.name = self.params.get('name')
+        self.connection.description = self.params.get('description')
+        self.connection.genre = self.params.get('genre')
+        self.connection.url = f'{host}{mount}'  # TODO set url using config window
+        self.connection.public = 0
+        self.connection.audio_info = self.params.get('audio_info')
 
     def connect(self):
         try:
-            with shouty.connect(**self.params) as connection:
-                self.connected = True
-                while True:
-                    self.send_chunk(connection)
-                # connection.close()
+            self.connection.open()
+            self.connected = True
+            while True:
+                self.send_chunk()
         except Exception as e:
             print(f'SHOUTERR: {e}\nreconnecting...')
 
+        self.connection.close()
         self.connected = False
 
-    def send_chunk(self, connection):
+    def send_chunk(self):
+        current_queue = self.playlist.current_chunk_queue()
+        current_track = self.playlist.get_current_track()
+        trackname = current_track.get_trackname() if current_track else 'IDLE'
+
         if self.playlist.is_recording():
-            if self.playlist.get_current_track().get_chunk_queue().empty():
+            if current_queue.empty():
                 chunk = self.get_idle_chunk()
             else:
-                chunk = self.playlist.get_current_track().get_chunk_queue().get()
+                chunk = current_queue.get()
 
         else:
-            current_queue = self.playlist.current_chunk_queue()
-
             if not current_queue or self.playlist.get_paused():  # nothing in queue or idling
                 chunk = self.get_idle_chunk()
 
@@ -63,8 +85,10 @@ class Shouter(Thread):
                 chunk = current_queue.get()
                 self.playlist.increment_progress()
 
-        connection.send(chunk)
-        connection.sync()
+        self.connection.set_metadata({'song': trackname})
+
+        self.connection.send(chunk)
+        self.connection.sync()
 
     def get_idle_chunk(self):
         chunk = self.idle.read(self.chunk_size)

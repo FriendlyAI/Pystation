@@ -9,7 +9,7 @@ from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, 
 from config import ConfigWindow
 from playlist import Playlist
 from recorder import Recorder
-from shout import Shouter
+from shouter import Shouter
 from thread_decorator import thread
 
 filetypes = ('*.mp3', '*.flac', '*.ogg', '*.aac', '*.webm', '*.mp4')
@@ -98,7 +98,7 @@ class Player(Tk):
 
         self.now_playing_label = Message(self, width=500 * self.scale, justify='center', background='gray92',
                                          textvariable=self.now_playing_label_text)
-        self.now_playing_label.bind('<Button-1>', lambda _: self.set_now_playing_label())
+        self.now_playing_label.bind('<Button-1>', lambda _: self.override_trackname())
 
         self.progress_bar = Progressbar(self, orient='horizontal', length=300 * self.scale, mode='determinate',
                                         maximum=1000)
@@ -230,7 +230,7 @@ class Player(Tk):
     def set_volume(self, volume):
         self.recorder.set_amplification(float(volume))
 
-    def set_now_playing_label(self):
+    def override_trackname(self):
         self.attributes("-topmost", False)
         new_trackname = askstring('Override Trackname', 'Enter new trackname', parent=self)
         if self.toplevel:
@@ -274,7 +274,10 @@ class Player(Tk):
             current_track_name = current_track.get_trackname()
             current_track_length = current_track.get_length()
 
-            progress = self.playlist.progress / current_track.get_num_chunks()
+            try:
+                progress = self.playlist.progress / current_track.get_num_chunks()
+            except ZeroDivisionError:
+                progress = 0
             current_track_time = progress * current_track_length
 
         else:  # idle
