@@ -9,6 +9,8 @@ Installation
 ------------
 Run `python3 setup.py install`
 
+Run `python3 -m pip install -r requirements.txt`
+
 Debian
 ------------
 Run `sudo apt-get install libshout3-dev` (Needed for header files)
