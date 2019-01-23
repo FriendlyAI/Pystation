@@ -9,15 +9,15 @@
 
 ## System Requirements
 
-Python 3.6
+[Python 3.6](https://www.python.org/downloads/)
 
-ffmpeg
+[ffmpeg](https://www.ffmpeg.org/)
 
-youtube-dl
+[youtube-dl](https://rg3.github.io/youtube-dl/)
 
-libshout2
+[libshout2](https://ftp.osuosl.org/pub/xiph/releases/libshout/)
 
-LAME
+[LAME](http://lame.sourceforge.net/download.php)
 
 ## Installation
 Ensure you have all of the above requirements and refer to the INSTALL.md file.
