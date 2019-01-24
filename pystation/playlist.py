@@ -26,13 +26,11 @@ class Playlist:
     def add_track(self, filename):
         track = Track(self.chunk_size, filename=filename)
         self.tracklist.append(track)
-        print(f'tracklist: {self.tracklist}\nadded {filename}')
         self.enqueue()
         self.playlist_updated = True
 
     @thread
     def add_youtube_track(self, url):
-        print(f'yt download: {url}')
         self.loading_tracklist.append(url)
 
         try:
@@ -94,7 +92,7 @@ class Playlist:
     def skip_track(self):
         if not self.is_recording():
             self.current_track = None
-
+            self.trackname_updated = True
             self.enqueue()
 
     def enqueue(self):
@@ -142,7 +140,6 @@ class Playlist:
             track_slot = self.next_track
 
         if not track_slot.get_read():  # Track has not been loaded before
-            print('queueing', track_slot)
             track_slot.read_file()
 
     def set_live_track(self, track):

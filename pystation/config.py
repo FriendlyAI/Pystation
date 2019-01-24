@@ -26,6 +26,7 @@ class ConfigWindow(Tk):
         self.title('Setup Pystation')
         self.protocol('WM_DELETE_WINDOW', self.cancel)
         self.configure(background='gray92')
+        self.bind('<Return>', lambda _: self.finish())
 
         self.user_params = ConfigParser()
         self.user_params.read(path.join('config', 'conf.ini'))

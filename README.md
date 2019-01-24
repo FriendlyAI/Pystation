@@ -20,7 +20,7 @@
 [LAME](http://lame.sourceforge.net/download.php)
 
 ## Installation
-Ensure you have all of the above requirements and refer to the INSTALL.md file.
+Ensure you have all of the above requirements and refer to the `INSTALL.md` file.
 
 ### Linux
 You must install tkinter using `sudo apt-get install python3-tk`
