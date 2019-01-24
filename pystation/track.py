@@ -37,7 +37,6 @@ class Track:
     def delete_file(self):
         try:
             remove(self.filename)
-            print(f'deleted {self.trackname}|{self.filename}')
         except FileNotFoundError:  # file already removed
             print(f'couldn\'t delete {self.trackname}|{self.filename}')
 

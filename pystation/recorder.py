@@ -13,7 +13,7 @@ from track import Track
 class Recorder(Thread):
 
     def __init__(self, speaker_id, microphone_id):
-        super(Recorder, self).__init__(daemon=True)
+        super(Recorder, self).__init__()
 
         self.speaker = None
         self.microphone = None

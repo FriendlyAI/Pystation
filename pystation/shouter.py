@@ -1,7 +1,6 @@
+from shout import Shout
 from threading import Thread
 from time import sleep
-
-from shout import Shout
 
 
 class Shouter(Thread):
@@ -44,8 +43,8 @@ class Shouter(Thread):
         self.connection.port = self.params.get('port')
         self.connection.user = self.params.get('username')
         self.connection.password = self.params.get('password')
-        self.connection.format = 'mp3'
         self.connection.mount = mount
+        self.connection.format = 'mp3'
         self.connection.protocol = 'http'
         self.connection.name = self.params.get('name')
         self.connection.description = self.params.get('description')

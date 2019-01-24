@@ -20,12 +20,13 @@ class Player(Tk):
     def __init__(self):
         super(Player, self).__init__()
 
-        # TODO add sections for organization
+        # Get user preferences
 
         user_params = ConfigParser()
         user_params.read(path.join('config', 'conf.ini'))
 
         # Window initialization
+
         self.toplevel = int(user_params.get('SYSTEM', 'toplevel'))
         if self.toplevel:
             self.attributes("-topmost", True)  # keep window on top
@@ -45,22 +46,32 @@ class Player(Tk):
 
         self.geometry('%dx%d+%d+%d' % (self.width, self.height, self.x_center, self.y_center))
 
+        # Speaker and microphone
+
         speaker_id = user_params.get('SYSTEM', 'speakerid')
         microphone_id = user_params.get('SYSTEM', 'microphoneid')
 
         self.recorder = Recorder(speaker_id, microphone_id)
         self.recorder.start()
 
+        # User parameters
+
         self.chunk_size = user_params.getint('ICECAST', 'chunksize')
         self.host = user_params.get('ICECAST', 'host')
         self.mount = user_params.get('ICECAST', 'mount')
         self.name = user_params.get('ICECAST', 'name')
 
+        # Playlist
+
         self.playlist = Playlist(self.chunk_size)
         self.playlist.set_live_track(self.recorder.get_track())
 
+        # Shouter
+
         self.shouter = Shouter(user_params, self.playlist, self.chunk_size)
         self.shouter.start()
+
+        # Player objects
 
         self.update_time = 100  # milleseconds
 
@@ -68,11 +79,15 @@ class Player(Tk):
 
         self.style = Style()
 
+        # Buttons
+
         self.upload_button = Button(self, text='Upload', takefocus=False, command=self.choose_upload)
 
         self.pause_button = Button(self, text='Pause', takefocus=False, command=self.toggle_pause)
 
         self.skip_button = Button(self, text='Skip', takefocus=False, command=self.skip)
+
+        # Recorder buttons
 
         self.recorder_frame = Frame(self)
 
@@ -92,7 +107,11 @@ class Player(Tk):
                                                text=f'Microphone {self.disconnected_symbol}',
                                                takefocus=False, command=self.record_microphone)
 
+        # Volume scale
+
         self.volume_scale = Scale(self, length=200 * self.scale, from_=0, to=2, value=1, command=self.set_volume)
+
+        # Now playing
 
         self.now_playing_label_text = StringVar()
 
@@ -100,12 +119,18 @@ class Player(Tk):
                                          textvariable=self.now_playing_label_text)
         self.now_playing_label.bind('<Button-1>', lambda _: self.override_trackname())
 
+        # Progress bar
+
         self.progress_bar = Progressbar(self, orient='horizontal', length=300 * self.scale, mode='determinate',
                                         maximum=1000)
 
         self.progress_label = Label(self, font='Menlo', background='gray92')
 
+        # Youtube input
+
         self.youtube_input = Entry(self, width=40, font='Menlo')
+
+        # Playlist treeview
 
         self.playlist_frame = Frame(self)
 
@@ -117,6 +142,8 @@ class Player(Tk):
 
         self.playlist_scrollbar = Scrollbar(self.playlist_frame_display, command=self.playlist_tree.yview)
 
+        # Playlist controls
+
         self.move_tracks_up_button = Button(self.playlist_frame_controls, text='Up', takefocus=False,
                                             command=self.move_tracks_up)
 
@@ -126,7 +153,11 @@ class Player(Tk):
         self.remove_track_button = Button(self.playlist_frame_controls, text='Remove', takefocus=False,
                                           command=self.remove_tracks)
 
+        # Pack UI
+
         self.init_ui()
+
+        # Begin refreshing player
 
         self.update_player()
 
@@ -232,7 +263,8 @@ class Player(Tk):
 
     def override_trackname(self):
         self.attributes("-topmost", False)
-        new_trackname = askstring('Override Trackname', 'Enter new trackname', parent=self)
+        new_trackname = askstring('Override Trackname', 'Enter new trackname',
+                                  initialvalue=self.now_playing_label_text.get(), parent=self)
         if self.toplevel:
             self.attributes("-topmost", True)
 
