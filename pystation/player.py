@@ -143,7 +143,8 @@ class Player(Tk):
 
         self.playlist_frame_controls = Frame(self.playlist_frame)
 
-        self.playlist_tree = Treeview(self.playlist_frame_display, height=10, columns='Length', selectmode='extended')
+        self.playlist_tree = Treeview(self.playlist_frame_display, height=10, columns=('Track', 'Length'),
+                                      selectmode='extended')
 
         self.playlist_scrollbar = Scrollbar(self.playlist_frame_display, command=self.playlist_tree.yview)
 
@@ -205,8 +206,10 @@ class Player(Tk):
 
         self.playlist_frame_controls.pack(side='right')
 
-        self.playlist_tree.heading('#0', text='Track', anchor='center')
-        self.playlist_tree.column('#0', width=425 * self.scale, minwidth=300 * self.scale)
+        self.playlist_tree.heading('#0', text='#', anchor='center')
+        self.playlist_tree.column('#0', width=25 * self.scale, minwidth=25 * self.scale)
+        self.playlist_tree.heading(column='Track', text='Track', anchor='center')
+        self.playlist_tree.column(column='Track', width=400 * self.scale, minwidth=300 * self.scale)
         self.playlist_tree.heading(column='Length', text='Length', anchor='center')
         self.playlist_tree.column(column='Length', width=50 * self.scale, minwidth=50 * self.scale)
         self.playlist_tree.configure(yscrollcommand=self.playlist_scrollbar.set)
@@ -348,8 +351,8 @@ class Player(Tk):
             # update playlist tree
             self.playlist_tree.delete(*self.playlist_tree.get_children())
             for index, track in enumerate(self.playlist.get_tracks()):
-                self.playlist_tree.insert('', 'end', iid=index, text=track.get_trackname(),
-                                          values=seconds_to_time(track.get_length()))
+                self.playlist_tree.insert('', 'end', iid=index, text=int(index) + 1,
+                                          values=(track.get_trackname(), seconds_to_time(track.get_length())))
             if self.focused_items:
                 for index in self.focused_items:
                     self.playlist_tree.selection_add(index)
