@@ -68,7 +68,7 @@ class Player(Tk):
 
         # Shouter
 
-        self.shouter = Shouter(user_params, self.playlist, self.chunk_size)
+        self.shouter = Shouter(user_params, self.playlist)
         self.shouter.start()
 
         # Player objects
@@ -110,6 +110,11 @@ class Player(Tk):
         # Volume scale
 
         self.volume_scale = Scale(self, length=200 * self.scale, from_=0, to=2, value=1, command=self.set_volume)
+
+        # Microphone scale
+
+        self.microphone_scale = Scale(self, length=200 * self.scale, from_=0, to=10, value=5,
+                                      command=self.set_microphone_volume)
 
         # Now playing
 
@@ -182,6 +187,8 @@ class Player(Tk):
         self.record_microphone_button.pack()
 
         self.volume_scale.pack()
+
+        self.microphone_scale.pack()
 
         self.now_playing_label.pack(pady=10 * self.scale)
 
@@ -260,6 +267,9 @@ class Player(Tk):
 
     def set_volume(self, volume):
         self.recorder.set_amplification(float(volume))
+
+    def set_microphone_volume(self, volume):
+        self.recorder.set_microphone_volume(float(volume))
 
     def override_trackname(self):
         self.attributes("-topmost", False)

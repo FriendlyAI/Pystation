@@ -5,27 +5,16 @@ from time import sleep
 
 class Shouter(Thread):
 
-    def __init__(self, user_params, playlist, chunk_size):
+    def __init__(self, user_params, playlist):
         super(Shouter, self).__init__(daemon=True)
 
-        self.params = {
-            'host': user_params.get('ICECAST', 'host'),
-            'port': user_params.getint('ICECAST', 'port'),
-            'user': user_params.get('ICECAST', 'username'),
-            'password': user_params.get('ICECAST', 'password'),
-            'mount': user_params.get('ICECAST', 'mount'),
-            'name': user_params.get('ICECAST', 'name'),
-            'description': user_params.get('ICECAST', 'description'),
-            'genre': user_params.get('ICECAST', 'genre'),
-            'audio_info': {
-                'channels': '2',
-                'samplerate': '44100'
-            }
-        }
+        self.connection_params = user_params['ICECAST']
+        self.audio_info = {'channels': '2', 'samplerate': '44100'}
+
         self.connection = Shout()
         self.init_connection()
 
-        self.chunk_size = chunk_size
+        self.chunk_size = int(self.connection_params['chunksize'])
 
         self.connected = False
 
@@ -36,22 +25,19 @@ class Shouter(Thread):
         self.trackname = ''
 
     def init_connection(self):
-        host = self.params.get('host')
-        mount = self.params.get('mount')
-
-        self.connection.host = host
-        self.connection.port = self.params.get('port')
-        self.connection.user = self.params.get('username')
-        self.connection.password = self.params.get('password')
-        self.connection.mount = mount
+        self.connection.host = self.connection_params['host']
+        self.connection.port = int(self.connection_params['port'])
+        self.connection.user = self.connection_params['username']
+        self.connection.password = self.connection_params['password']
+        self.connection.mount = self.connection_params['mount']
         self.connection.format = 'mp3'
         self.connection.protocol = 'http'
-        self.connection.name = self.params.get('name')
-        self.connection.description = self.params.get('description')
-        self.connection.genre = self.params.get('genre')
-        self.connection.url = f'{host}{mount}'  # TODO set url using config window
+        self.connection.name = self.connection_params['name']
+        self.connection.description = self.connection_params['description']
+        self.connection.genre = self.connection_params['genre']
+        self.connection.url = self.connection_params['url']
         self.connection.public = 0
-        self.connection.audio_info = self.params.get('audio_info')
+        self.connection.audio_info = self.audio_info
 
     def connect(self):
         try:

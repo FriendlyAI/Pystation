@@ -37,6 +37,8 @@ class Recorder(Thread):
 
         self.amplification = 1.0
 
+        self.microphone_volume = 5.0
+
         self.killed = Event()
         self.killed.clear()
 
@@ -84,7 +86,7 @@ class Recorder(Thread):
         if self.recording_speaker and self.recording_microphone:
             microphone_chunk = self.microphone_queue.get()
             speaker_chunk = self.speaker_queue.get()
-            int16_frames = (average([microphone_chunk, speaker_chunk], axis=0, weights=[5, 1])
+            int16_frames = (average([microphone_chunk, speaker_chunk], axis=0, weights=[self.microphone_volume, 1])
                             * self.int16_max).astype(int16)
 
         elif self.recording_speaker:
@@ -129,8 +131,11 @@ class Recorder(Thread):
     def set_amplification(self, amplification):
         self.amplification = amplification
 
+    def set_microphone_volume(self, volume):
+        self.microphone_volume = volume
+
     def run(self):
-        while True:
+        while not self.killed.is_set():
             if self.recording_speaker or self.recording_microphone:
                 self.add_chunk()
             else:
