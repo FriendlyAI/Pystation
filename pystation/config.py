@@ -113,7 +113,6 @@ class ConfigWindow(Tk):
         self.speaker_text = StringVar()
         if default_speaker in speakers:
             self.speaker_text.set(default_speaker)
-        self.speaker_text.set(default_speaker)
         self.speaker_choice = Combobox(self.lower_frame, width=40, values=speakers,
                                        textvariable=self.speaker_text, state='readonly', takefocus=False)
         self.speaker_choice.bind('<<ComboboxSelected>>', lambda _: self.select_speaker())

@@ -1,4 +1,4 @@
-from shout import Shout
+from shout import Shout, SHOUT_AI_CHANNELS, SHOUT_AI_SAMPLERATE
 from threading import Thread
 from time import sleep
 
@@ -9,7 +9,7 @@ class Shouter(Thread):
         super(Shouter, self).__init__(daemon=True)
 
         self.connection_params = user_params['ICECAST']
-        self.audio_info = {'channels': '2', 'samplerate': '44100'}
+        self.audio_info = {SHOUT_AI_CHANNELS: '2', SHOUT_AI_SAMPLERATE: '44100'}
 
         self.connection = Shout()
         self.init_connection()
@@ -21,8 +21,6 @@ class Shouter(Thread):
         self.playlist = playlist
 
         self.idle = open(user_params.get('GENERAL', 'idle'), 'rb')
-
-        self.trackname = ''
 
     def init_connection(self):
         self.connection.host = self.connection_params['host']
