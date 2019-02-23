@@ -8,32 +8,32 @@ DURATION_CMD = 'echo \'{ "command": ["get_property", "duration"] }\' | socat - /
 
 
 def get_mpv_tags():
-    p = subprocess.Popen(METADATA_CMD, shell=True, stdout=subprocess.PIPE)
+    p = subprocess.Popen(METADATA_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     out = p.stdout.read()
     if not out:
         return ''
 
     json_metadata = json.loads(out.decode('utf-8'))
 
-    data = json_metadata.get('data', None)
+    data = json_metadata.get('data')
     if data is None:
         return ''
 
-    artist = data.get('Artist', None)
-    title = data.get('Title', None)
+    artist = data.get('Artist')
+    title = data.get('Title')
 
     if artist or title:
         return f'{artist if artist else "Unknown"} - {title if title else "Unknown"}'
 
     else:
-        p = subprocess.Popen(FILENAME_CMD, shell=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(FILENAME_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         json_metadata = json.loads(p.stdout.read().decode('utf-8'))
         return json_metadata.get('data')
 
 
 def get_progress():
-    p_playback = subprocess.Popen(PLAYBACK_TIME_CMD, shell=True, stdout=subprocess.PIPE)
-    p_duration = subprocess.Popen(DURATION_CMD, shell=True, stdout=subprocess.PIPE)
+    p_playback = subprocess.Popen(PLAYBACK_TIME_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    p_duration = subprocess.Popen(DURATION_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     out_playback = p_playback.stdout.read()
     out_duration = p_duration.stdout.read()
 
@@ -46,4 +46,6 @@ def get_progress():
     playback_time = json_playback.get('data')
     duration = json_duration.get('data')
 
-    return float(playback_time) / float(duration), playback_time, duration
+    if playback_time and duration:
+        return float(playback_time) / float(duration), playback_time, duration
+    return 0, 0, 0

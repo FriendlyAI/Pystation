@@ -75,7 +75,7 @@ class Player(Tk):
 
         # Player objects
 
-        self.update_time = 200  # milleseconds
+        self.update_time = 100  # milleseconds
 
         self.focused_items = ()
 
@@ -303,7 +303,13 @@ class Player(Tk):
                 self.shouter.update_metadata(trackname)
             else:
                 self.update_trackname()
-        self.set_progress(*get_progress())
+
+        progress, current_track_time, current_track_length = get_progress()
+
+        if progress + current_track_time + current_track_length == 0:
+            self.set_progress(self.recorder.get_volume(), 0, 0)
+        else:
+            self.set_progress(progress, current_track_time, current_track_length)
 
     def set_progress(self, progress, current_track_time, current_track_length):
         self.progress_bar['value'] = progress * 1000
@@ -325,12 +331,12 @@ class Player(Tk):
 
         current_track = self.playlist.get_current_track()  # Track object
 
-        if self.playlist.is_recording():
-            progress = self.recorder.get_volume()
-            current_track_time = 0
-            current_track_length = 0
+        # if self.playlist.is_recording():
+        #     progress = self.recorder.get_volume()
+        #     current_track_time = 0
+        #     current_track_length = 0
 
-        elif not self.playlist.get_paused() and current_track:
+        if not self.playlist.is_recording() and not self.playlist.get_paused() and current_track:
             current_track_length = current_track.get_length()
 
             try:

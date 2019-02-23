@@ -1,4 +1,5 @@
 from os import remove, listdir, getcwd
+from os.path import isfile
 
 from player import run_player
 
@@ -13,3 +14,6 @@ if __name__ == '__main__':
             remove(f'{temp_path}/{file}')
         except (PermissionError, IsADirectoryError):
             pass
+
+    if isfile('/tmp/mpvsocket'):
+        remove('/tmp/mpvsocket')
