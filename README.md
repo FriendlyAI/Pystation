@@ -6,6 +6,8 @@
 - Player supports music queue, reordering/modifying queue, pause/play, and idle tracks.
 - Play youtube videos using links.
 - Support for streaming directly from speakers (with loopback) and microphone simultaneously.
+- Automatically get tags and playback data from your mpv player when streaming from your speakers.
+  - Run mpv with `mpv file.mkv --input-ipc-server=/tmp/mpvsocket`
 
 ## System Requirements
 
