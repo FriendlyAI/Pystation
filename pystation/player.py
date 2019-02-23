@@ -306,10 +306,7 @@ class Player(Tk):
 
         progress, current_track_time, current_track_length = get_progress()
 
-        if progress + current_track_time + current_track_length == 0:
-            self.set_progress(self.recorder.get_volume(), 0, 0)
-        else:
-            self.set_progress(progress, current_track_time, current_track_length)
+        self.set_progress(self.recorder.get_volume(), current_track_time, current_track_length)
 
     def set_progress(self, progress, current_track_time, current_track_length):
         self.progress_bar['value'] = progress * 1000
@@ -330,11 +327,6 @@ class Player(Tk):
         self.title(f'{connection_status} {self.name}@{self.host}{self.mount}')
 
         current_track = self.playlist.get_current_track()  # Track object
-
-        # if self.playlist.is_recording():
-        #     progress = self.recorder.get_volume()
-        #     current_track_time = 0
-        #     current_track_length = 0
 
         if not self.playlist.is_recording() and not self.playlist.get_paused() and current_track:
             current_track_length = current_track.get_length()
