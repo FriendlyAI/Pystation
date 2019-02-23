@@ -9,12 +9,14 @@ class Track:
     def __init__(self, chunk_size, filename=None, url=None):
         if filename and isfile(filename):
             self.trackname, self.filename, self.length = validate(filename)
-            self.file_reader = open(self.filename, 'rb')
         elif url:
             self.trackname, self.filename, self.length = youtube_download(url)
         else:
             self.filename = None
             self.trackname = 'LIVE'
+
+        if self.filename:
+            self.file_reader = open(self.filename, 'rb')
 
         self.chunk_size = chunk_size
 

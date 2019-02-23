@@ -77,7 +77,7 @@ def get_tags(filename, temp=False):
         convert_to_mp3(filename, temp_filename)
 
     if artist or title:
-        return f'{artist if artist else "<UNKNOWN>"} - {title if title else "<UNKNOWN>"}', temp_filename
+        return f'{artist if artist else "Unknown"} - {title if title else "Unknown"}', temp_filename
     else:
         return '', temp_filename
 

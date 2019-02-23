@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os import environ, path
+from os import environ, path, getcwd
 from platform import system
 from sys import exit
 from tkinter import Tk, filedialog, StringVar, Message, IntVar
@@ -12,12 +12,14 @@ class ConfigWindow(Tk):
     def __init__(self):
         super(ConfigWindow, self).__init__()
 
+        print(getcwd())
+
         self.scale = 1
         if system() == 'Linux':
             self.scale = 2
 
         self.width = 600 * self.scale
-        self.height = 500 * self.scale
+        self.height = 550 * self.scale
 
         self.x_center = int(self.winfo_screenwidth() / 2 - self.width / 2)
         self.y_center = int(self.winfo_screenheight() / 2 - self.height / 2)
@@ -45,6 +47,7 @@ class ConfigWindow(Tk):
         default_speaker = self.user_params.get('SYSTEM', 'speakername', fallback='')
         default_microphone = self.user_params.get('SYSTEM', 'microphonename', fallback='')
         default_top = self.user_params.get('SYSTEM', 'toplevel', fallback='0')
+        default_mpv_tags = self.user_params.get('SYSTEM', 'mpvtags', fallback='0')
 
         for section in ('ICECAST', 'GENERAL', 'SYSTEM'):  # if conf.ini doens't exist or is corrupt
             try:
@@ -135,6 +138,12 @@ class ConfigWindow(Tk):
         if int(default_top):
             self.top_window_checkbutton.invoke()
 
+        self.mpv_tags_status = IntVar()
+        self.mpv_tags_checkbutton = Checkbutton(self, text='Get tags automatically from mpv',
+                                                variable=self.mpv_tags_status, takefocus=False)
+        if int(default_mpv_tags):
+            self.mpv_tags_checkbutton.invoke()
+
         self.finish_button = Button(self, text='Finish', takefocus=False, command=self.finish)
 
         self.init_ui()
@@ -186,9 +195,11 @@ class ConfigWindow(Tk):
         self.microphone_label.grid(row=1, column=0, sticky='w')
         self.microphone_choice.grid(row=1, column=1)
 
-        self.top_window_checkbutton.pack(pady=10 * self.scale)
+        self.top_window_checkbutton.pack()
 
-        self.finish_button.pack()
+        self.mpv_tags_checkbutton.pack()
+
+        self.finish_button.pack(pady=20 * self.scale)
 
     def select_idle_file(self):
         filename = filedialog.askopenfilename(initialdir=f'{path.join(environ["HOME"], "Downloads")}',

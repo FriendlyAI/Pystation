@@ -6,6 +6,7 @@ from tkinter.messagebox import askyesno
 from tkinter.simpledialog import askstring
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style, Scale
 
+from auto_tag import get_mpv_tags, get_progress
 from config import ConfigWindow
 from playlist import Playlist
 from recorder import Recorder
@@ -36,7 +37,7 @@ class Player(Tk):
             self.scale = 2
 
         self.width = 600 * self.scale
-        self.height = 500 * self.scale
+        self.height = 550 * self.scale
 
         self.x_center = self.winfo_screenwidth() / 2 - self.width / 2
         self.y_center = self.winfo_screenheight() / 2 - self.height / 2
@@ -60,6 +61,7 @@ class Player(Tk):
         self.host = user_params.get('ICECAST', 'host')
         self.mount = user_params.get('ICECAST', 'mount')
         self.name = user_params.get('ICECAST', 'name')
+        self.mpv_tags = int(user_params.get('SYSTEM', 'mpvtags'))
 
         # Playlist
 
@@ -73,7 +75,7 @@ class Player(Tk):
 
         # Player objects
 
-        self.update_time = 100  # milleseconds
+        self.update_time = 200  # milleseconds
 
         self.focused_items = ()
 
@@ -143,7 +145,7 @@ class Player(Tk):
 
         self.playlist_frame_controls = Frame(self.playlist_frame)
 
-        self.playlist_tree = Treeview(self.playlist_frame_display, height=10, columns=('Track', 'Length'),
+        self.playlist_tree = Treeview(self.playlist_frame_display, height=12, columns=('Track', 'Length'),
                                       selectmode='extended')
 
         self.playlist_scrollbar = Scrollbar(self.playlist_frame_display, command=self.playlist_tree.yview)
@@ -206,10 +208,10 @@ class Player(Tk):
 
         self.playlist_frame_controls.pack(side='right')
 
-        self.playlist_tree.heading('#0', text='#', anchor='center')
-        self.playlist_tree.column('#0', width=25 * self.scale, minwidth=25 * self.scale)
+        self.playlist_tree.heading('#0', text='#')
+        self.playlist_tree.column('#0', width=30 * self.scale, minwidth=30 * self.scale)
         self.playlist_tree.heading(column='Track', text='Track', anchor='center')
-        self.playlist_tree.column(column='Track', width=400 * self.scale, minwidth=300 * self.scale)
+        self.playlist_tree.column(column='Track', width=395 * self.scale, minwidth=300 * self.scale)
         self.playlist_tree.heading(column='Length', text='Length', anchor='center')
         self.playlist_tree.column(column='Length', width=50 * self.scale, minwidth=50 * self.scale)
         self.playlist_tree.configure(yscrollcommand=self.playlist_scrollbar.set)
@@ -293,6 +295,21 @@ class Player(Tk):
         self.now_playing_label_text.set(trackname)
         self.shouter.update_metadata(trackname)
 
+    def update_mpv_trackname(self):
+        if self.playlist.is_recording_speaker():
+            trackname = get_mpv_tags()
+            if trackname:
+                self.now_playing_label_text.set(trackname)
+                self.shouter.update_metadata(trackname)
+            else:
+                self.update_trackname()
+        self.set_progress(*get_progress())
+
+    def set_progress(self, progress, current_track_time, current_track_length):
+        self.progress_bar['value'] = progress * 1000
+        self.progress_label.config(
+            text=f'{seconds_to_time(current_track_time)}/{seconds_to_time(current_track_length)}')
+
     def youtube_download(self, url):
         if not url:
             return
@@ -301,14 +318,6 @@ class Player(Tk):
         self.playlist.add_youtube_track(url)
 
     def update_player(self):
-        def seconds_to_time(seconds):
-            minutes, seconds = divmod(int(seconds), 60)
-            hours, minutes = divmod(minutes, 60)
-
-            if hours:
-                return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
-            else:
-                return '{:02d}:{:02d}'.format(minutes, seconds)
 
         connection_status = self.connected_symbol if self.shouter.get_connected() else self.disconnected_symbol
 
@@ -336,19 +345,21 @@ class Player(Tk):
             current_track_time = 0
             current_track_length = 0
 
-        # update progress bar and label
-        if not self.playlist.get_paused() or self.playlist.is_recording():
-            self.progress_bar['value'] = progress * 1000
-            self.progress_label.config(
-                text=f'{seconds_to_time(current_track_time)}/{seconds_to_time(current_track_length)}')
+        # force update mpv trackname and progress
+        if self.mpv_tags and self.playlist.is_recording_speaker():
+            self.update_mpv_trackname()
 
-        if self.playlist.get_trackname_updated():
+        else:
+            if not self.playlist.get_paused() or self.playlist.is_recording():
+                self.set_progress(progress, current_track_time, current_track_length)
+
             # update now playing name
-            self.update_trackname()
-            self.playlist.update_trackname()
+            if self.playlist.get_trackname_updated():
+                self.update_trackname()
+                self.playlist.update_trackname()
 
+        # update playlist tree
         if self.playlist.get_playlist_updated():
-            # update playlist tree
             self.playlist_tree.delete(*self.playlist_tree.get_children())
             for index, track in enumerate(self.playlist.get_tracks()):
                 self.playlist_tree.insert('', 'end', iid=index, text=int(index) + 1,
@@ -399,6 +410,16 @@ class Player(Tk):
             self.destroy()
         elif self.toplevel:
             self.attributes("-topmost", True)
+
+
+def seconds_to_time(seconds):
+    minutes, seconds = divmod(int(seconds), 60)
+    hours, minutes = divmod(minutes, 60)
+
+    if hours:
+        return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+    else:
+        return '{:02d}:{:02d}'.format(minutes, seconds)
 
 
 def run_player():
