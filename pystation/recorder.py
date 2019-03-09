@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Thread, Event
 from time import sleep
 
-from numpy import int16, average, amax, amin
+from numpy import int16, average, amax
 from soundcard import get_microphone
 
 from thread_decorator import thread
@@ -96,7 +96,7 @@ class Recorder(Thread):
             int16_frames = (self.microphone_queue.get() * self.int16_max).astype(int16)
 
         if int16_frames.size != 0:
-            volume = max(amax(int16_frames), abs(amin(int16_frames))) / self.int16_max
+            volume = amax(int16_frames) / self.int16_max  # is abs even necessary for approximation?
 
             if volume != 0 and self.amplification != 1:
                 max_amplification = 1 / volume

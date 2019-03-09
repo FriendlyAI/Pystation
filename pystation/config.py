@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from os import environ, path, getcwd
+from os import environ, path
 from platform import system
 from sys import exit
 from tkinter import Tk, filedialog, StringVar, Message, IntVar
@@ -11,8 +11,6 @@ from soundcard import all_microphones
 class ConfigWindow(Tk):
     def __init__(self):
         super(ConfigWindow, self).__init__()
-
-        print(getcwd())
 
         self.scale = 1
         if system() == 'Linux':
