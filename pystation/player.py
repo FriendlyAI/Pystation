@@ -73,6 +73,9 @@ class Player(Tk):
         self.shouter = Shouter(user_params, self.playlist)
         self.shouter.start()
 
+        # mpv Trackname
+        self.trackname_last = ''
+
         # Player objects
 
         self.update_time = 100  # milleseconds
@@ -300,7 +303,9 @@ class Player(Tk):
             trackname = get_mpv_tags()
             if trackname:
                 self.now_playing_label_text.set(trackname)
-                self.shouter.update_metadata(trackname)
+                if trackname != self.trackname_last:  # avoid sending too many metadata updates
+                    self.shouter.update_metadata(trackname)
+                    self.trackname_last = trackname
             else:
                 self.update_trackname()
 
