@@ -306,6 +306,7 @@ class Player(Tk):
                 self.shouter.update_metadata(trackname)
                 self.trackname_last = trackname
             elif not trackname:
+                self.trackname_last = ''
                 self.update_trackname()
 
         progress, current_track_time, current_track_length = get_progress()
