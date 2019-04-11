@@ -301,12 +301,11 @@ class Player(Tk):
     def update_mpv_trackname(self):
         if self.playlist.is_recording_speaker():
             trackname = get_mpv_tags()
-            if trackname:
+            if trackname and trackname != self.trackname_last:  # avoid sending too many metadata updates
                 self.now_playing_label_text.set(trackname)
-                if trackname != self.trackname_last:  # avoid sending too many metadata updates
-                    self.shouter.update_metadata(trackname)
-                    self.trackname_last = trackname
-            else:
+                self.shouter.update_metadata(trackname)
+                self.trackname_last = trackname
+            elif not trackname:
                 self.update_trackname()
 
         progress, current_track_time, current_track_length = get_progress()

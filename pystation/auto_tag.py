@@ -1,5 +1,5 @@
-import subprocess
 import json
+import subprocess
 
 METADATA_CMD = 'echo \'{ "command": ["get_property", "filtered-metadata"] }\' | socat - /tmp/mpvsocket'
 FILENAME_CMD = 'echo \'{ "command": ["get_property", "filename"] }\' | socat - /tmp/mpvsocket'
