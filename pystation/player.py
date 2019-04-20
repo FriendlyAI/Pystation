@@ -295,6 +295,7 @@ class Player(Tk):
     def update_trackname(self):
         track = self.playlist.get_current_track()
         trackname = track.get_trackname() if track else 'IDLE'
+        self.trackname_last = trackname
         self.now_playing_label_text.set(trackname)
         self.shouter.update_metadata(trackname)
 
