@@ -2,7 +2,7 @@ import json
 import subprocess
 
 METADATA_CMD = 'echo \'{ "command": ["get_property", "filtered-metadata"] }\' | socat - /tmp/mpvsocket'
-FILENAME_CMD = 'echo \'{ "command": ["get_property", "filename"] }\' | socat - /tmp/mpvsocket'
+ALT_TITLE_CMD = 'echo \'{ "command": ["get_property", "media-title"] }\' | socat - /tmp/mpvsocket'
 PLAYBACK_TIME_CMD = 'echo \'{ "command": ["get_property", "playback-time"] }\' | socat - /tmp/mpvsocket'
 DURATION_CMD = 'echo \'{ "command": ["get_property", "duration"] }\' | socat - /tmp/mpvsocket'
 
@@ -26,7 +26,7 @@ def get_mpv_tags():
         return f'{artist if artist else "Unknown"} - {title if title else "Unknown"}'
 
     else:
-        p = subprocess.Popen(FILENAME_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        p = subprocess.Popen(ALT_TITLE_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         json_metadata = json.loads(p.stdout.read().decode('utf-8'))
         return json_metadata.get('data')
 
