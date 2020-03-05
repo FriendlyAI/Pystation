@@ -2,7 +2,7 @@ from configparser import ConfigParser
 from os import environ, path
 from platform import system
 from sys import exit
-from tkinter import Tk, filedialog, StringVar, Message, IntVar
+from tkinter import Tk, filedialog, StringVar, Message, IntVar, Image
 from tkinter.ttk import Button, Entry, Label, Frame, Combobox, Checkbutton
 
 from soundcard import all_microphones
@@ -248,3 +248,9 @@ class ConfigWindow(Tk):
     def cancel(self):
         self.destroy()
         exit()
+
+
+def run_config():
+    config_window = ConfigWindow()
+    config_window.call('wm', 'iconphoto', config_window._w, Image('photo', file='img/icon.png'))
+    config_window.mainloop()

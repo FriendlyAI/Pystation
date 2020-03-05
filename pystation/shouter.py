@@ -1,7 +1,8 @@
-from shout import Shout, SHOUT_AI_CHANNELS, SHOUT_AI_SAMPLERATE, ShoutException
 from threading import Thread
-from thread_decorator import thread
 from time import sleep
+
+from shout import Shout, SHOUT_AI_CHANNELS, SHOUT_AI_SAMPLERATE, ShoutException
+from thread_decorator import thread
 
 
 class Shouter(Thread):

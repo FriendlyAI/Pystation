@@ -7,7 +7,6 @@ from tkinter.simpledialog import askstring
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style, Scale
 
 from auto_tag import get_mpv_tags, get_progress
-from config import ConfigWindow
 from playlist import Playlist
 from recorder import Recorder
 from shouter import Shouter
@@ -427,11 +426,6 @@ def seconds_to_time(seconds):
 
 
 def run_player():
-    # Config window
-    config_window = ConfigWindow()
-    config_window.mainloop()
-
-    # Main player
     root = Player()
-    root.call('wm','iconphoto', root._w, Image('photo', file='img/icon.png'))
+    root.call('wm', 'iconphoto', root._w, Image('photo', file='img/icon.png'))
     root.mainloop()

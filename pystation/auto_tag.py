@@ -1,5 +1,5 @@
-import json
-import subprocess
+from json import loads
+from subprocess import Popen, PIPE, DEVNULL
 
 METADATA_CMD = 'echo \'{ "command": ["get_property", "filtered-metadata"] }\' | socat - /tmp/mpvsocket'
 ALT_TITLE_CMD = 'echo \'{ "command": ["get_property", "media-title"] }\' | socat - /tmp/mpvsocket'
@@ -8,12 +8,12 @@ DURATION_CMD = 'echo \'{ "command": ["get_property", "duration"] }\' | socat - /
 
 
 def get_mpv_tags():
-    p = subprocess.Popen(METADATA_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    p = Popen(METADATA_CMD, shell=True, stdout=PIPE, stderr=DEVNULL)
     out = p.stdout.read()
     if not out:
         return ''
 
-    json_metadata = json.loads(out.decode('utf-8'))
+    json_metadata = loads(out.decode('utf-8'))
 
     data = json_metadata.get('data')
     if data is None:
@@ -26,22 +26,22 @@ def get_mpv_tags():
         return f'{artist if artist else "Unknown"} - {title if title else "Unknown"}'
 
     else:
-        p = subprocess.Popen(ALT_TITLE_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        json_metadata = json.loads(p.stdout.read().decode('utf-8'))
+        p = Popen(ALT_TITLE_CMD, shell=True, stdout=PIPE, stderr=DEVNULL)
+        json_metadata = loads(p.stdout.read().decode('utf-8'))
         return json_metadata.get('data')
 
 
 def get_progress():
-    p_playback = subprocess.Popen(PLAYBACK_TIME_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    p_duration = subprocess.Popen(DURATION_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    p_playback = Popen(PLAYBACK_TIME_CMD, shell=True, stdout=PIPE, stderr=DEVNULL)
+    p_duration = Popen(DURATION_CMD, shell=True, stdout=PIPE, stderr=DEVNULL)
     out_playback = p_playback.stdout.read()
     out_duration = p_duration.stdout.read()
 
     if not out_playback or not out_duration:
         return 0, 0, 0
 
-    json_playback = json.loads(out_playback.decode('utf-8'))
-    json_duration = json.loads(out_duration.decode('utf-8'))
+    json_playback = loads(out_playback.decode('utf-8'))
+    json_duration = loads(out_duration.decode('utf-8'))
 
     playback_time = json_playback.get('data')
     duration = json_duration.get('data')

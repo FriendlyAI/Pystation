@@ -1,8 +1,8 @@
-from lameenc import Encoder
 from queue import Queue
 from threading import Thread, Event
 from time import sleep
 
+from lameenc import Encoder
 from numpy import int16, average, amax
 from soundcard import get_microphone
 
