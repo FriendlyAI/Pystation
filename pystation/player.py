@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 from os import environ, path
 from platform import system
-from tkinter import Tk, filedialog, StringVar, Message
+from tkinter import Tk, filedialog, StringVar, Message, Image
 from tkinter.messagebox import askyesno
 from tkinter.simpledialog import askstring
 from tkinter.ttk import Button, Entry, Label, Progressbar, Treeview, Scrollbar, Frame, Style, Scale
@@ -306,7 +306,7 @@ class Player(Tk):
                 self.now_playing_label_text.set(trackname)
                 self.shouter.update_metadata(trackname)
                 self.trackname_last = trackname
-            elif not trackname:
+            elif not trackname and self.trackname_last:
                 self.trackname_last = ''
                 self.update_trackname()
 
@@ -433,4 +433,5 @@ def run_player():
 
     # Main player
     root = Player()
+    root.call('wm','iconphoto', root._w, Image('photo', file='img/icon.png'))
     root.mainloop()

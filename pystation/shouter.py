@@ -1,5 +1,6 @@
-from shout import Shout, SHOUT_AI_CHANNELS, SHOUT_AI_SAMPLERATE
+from shout import Shout, SHOUT_AI_CHANNELS, SHOUT_AI_SAMPLERATE, ShoutException
 from threading import Thread
+from thread_decorator import thread
 from time import sleep
 
 
@@ -70,8 +71,12 @@ class Shouter(Thread):
         self.connection.send(chunk)
         self.connection.sync()
 
+    @thread
     def update_metadata(self, trackname):
-        self.connection.set_metadata({'song': trackname})
+        try:
+            self.connection.set_metadata({'song': trackname})
+        except ShoutException:
+            print('error: couldn\'t update metadata')
 
     def get_idle_chunk(self):
         chunk = self.idle.read(self.chunk_size)
