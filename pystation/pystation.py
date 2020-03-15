@@ -1,8 +1,14 @@
 from os import remove, listdir, getcwd
 from os.path import isfile
+from sys import exit
 
 from config import run_config
 from player import run_player
+
+# Check cwd
+if not getcwd().endswith('Pystation'):
+    print('Error: Pystation must be run from the base directory (Pystation/)\nExiting...')
+    exit()
 
 temp_path = f'{getcwd()}/temp'
 
