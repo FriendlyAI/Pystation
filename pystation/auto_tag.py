@@ -1,4 +1,5 @@
 from json import loads
+from json.decoder import JSONDecodeError
 from subprocess import Popen, PIPE, DEVNULL
 
 METADATA_CMD = 'echo \'{ "command": ["get_property", "filtered-metadata"] }\' | socat - /tmp/mpvsocket'
@@ -40,8 +41,11 @@ def get_progress():
     if not out_playback or not out_duration:
         return 0, 0, 0
 
-    json_playback = loads(out_playback.decode('utf-8'))
-    json_duration = loads(out_duration.decode('utf-8'))
+    try:
+        json_playback = loads(out_playback.decode('utf-8'))
+        json_duration = loads(out_duration.decode('utf-8'))
+    except JSONDecodeError:
+        return 0, 0, 0
 
     playback_time = json_playback.get('data')
     duration = json_duration.get('data')

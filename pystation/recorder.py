@@ -96,14 +96,15 @@ class Recorder(Thread):
             int16_frames = (self.microphone_queue.get() * self.int16_max).astype(int16)
 
         if int16_frames.size != 0:
-            volume = amax(int16_frames) / self.int16_max  # is abs even necessary for approximation?
+            volume = amax(int16_frames) / self.int16_max
 
             if volume != 0 and self.amplification != 1:
-                max_amplification = 1 / volume
-                amplification = min(self.amplification, max_amplification)
+                # prevent volume clipping
+                # max_amplification = 1 / volume
+                # self.amplification = min(self.amplification, max_amplification)
 
-                int16_frames = (int16_frames * amplification).astype(int16)
-                volume *= amplification
+                int16_frames = (int16_frames * self.amplification).astype(int16)
+                volume *= self.amplification
 
             self.volume = volume
 
